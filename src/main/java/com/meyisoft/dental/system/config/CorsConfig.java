@@ -20,10 +20,11 @@ public class CorsConfig {
         // Permite credenciales (cookies, headers de autorización)
         config.setAllowCredentials(true);
 
-        // Configura tus dominios permitidos (Aquí pondrás los dominios de tus frontend)
-        config.setAllowedOrigins(List.of(
-                "http://localhost:4200", // Next.js / React local
-                "http://localhost:5173" // Vite / Vue local
+        // Permitir el dominio de producción y subdominios
+        config.setAllowedOriginPatterns(List.of(
+                "https://*.meyisoft.com",
+                "http://localhost:[*]",
+                "https://*.run.app"
         ));
 
         // Headers y métodos permitidos
