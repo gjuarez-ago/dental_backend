@@ -21,12 +21,13 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         // Permitir el dominio de producción y subdominios
-        config.setAllowedOriginPatterns(List.of(
-                "https://*.meyisoft.com",
-                "http://localhost:[*]",
-                "https://*.run.app"
-        ));
-
+config.setAllowedOriginPatterns(List.of(
+        "https://*.meyisoft.com",
+        "http://localhost:[*]",
+        "https://*.run.app",
+        "https://sonrisana.site",
+        "https://*.sonrisana.site"
+));
         // Headers y métodos permitidos
         config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization", "X-Tenant-ID"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
