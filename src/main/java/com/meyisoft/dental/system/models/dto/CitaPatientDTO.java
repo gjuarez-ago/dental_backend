@@ -21,6 +21,8 @@ public class CitaPatientDTO {
     private String sucursalNombre;
     private String sucursalTelefono;
     private String servicioNombre;
+    private String doctorNombre;
+    private String doctorGenero;
     private OffsetDateTime fechaHora;
     private AppointmentStatus estado;
     

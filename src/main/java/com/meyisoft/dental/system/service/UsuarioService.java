@@ -2,10 +2,12 @@ package com.meyisoft.dental.system.service;
 
 import com.meyisoft.dental.system.entity.Usuario;
 import com.meyisoft.dental.system.enums.UserRole;
+import com.meyisoft.dental.system.enums.NotificationType;
 import com.meyisoft.dental.system.config.AuditAction;
 import com.meyisoft.dental.system.exception.BusinessException;
 import com.meyisoft.dental.system.models.request.UsuarioRequest;
 import com.meyisoft.dental.system.models.response.UsuarioResponse;
+import com.meyisoft.dental.system.repository.EmpresaRepository;
 import com.meyisoft.dental.system.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -21,7 +25,10 @@ import java.util.stream.Collectors;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final EmpresaRepository empresaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
+    private final Random random = new Random();
 
     @Transactional(readOnly = true)
     public List<UsuarioResponse> listarUsuariosPorSucursal(UUID tenantId, UUID sucursalId) {
@@ -39,43 +46,66 @@ public class UsuarioService {
             throw new BusinessException("SOLO_OWNER_PUEDE_CREAR", "Solo el propietario puede crear nuevos usuarios.");
         }
 
-        // 2. Validar longitud del NIP
-        if (request.getNip() == null || request.getNip().length() != 6 || !request.getNip().matches("\\d+")) {
-            throw new BusinessException("NIP_INVALIDO", "El NIP debe ser exactamente de 6 dígitos numéricos.");
-        }
+        // 2. Generar NIP aleatorio de 6 dígitos
+        String nipGenerado = String.format("%06d", random.nextInt(1000000));
 
         // 3. Validar límites por rol
         if (request.getRol() == UserRole.OWNER) {
             throw new BusinessException("DUENO_UNICO", "El sistema solo permite un dueño único por clínica.");
         }
 
+        // Validaciones comerciales según el plan de la empresa
+        com.meyisoft.dental.system.entity.Empresa empresa = empresaRepository.findById(tenantId)
+                .orElseThrow(() -> new BusinessException("EMPRESA_NOT_FOUND", "No se encontró la configuración de la clínica."));
+        
+        String plan = empresa.getPlanSuscripcion() != null ? empresa.getPlanSuscripcion() : "SOLO";
+
+        // Si se intenta agregar personal médico, validamos los límites del plan
+        if (Boolean.TRUE.equals(request.getEsPersonalClinico()) || request.getRol() == UserRole.DOCTOR) {
+            long staffClinicoActual = usuarioRepository.countClinicalStaffByTenant(tenantId);
+            
+            if ("SOLO".equals(plan) && staffClinicoActual >= 1) {
+                throw new BusinessException("LIMITE_PLAN_EXCEDIDO", 
+                    "Tu plan actual (SOLO) solo permite 1 profesional clínico (el doctor). Para agregar más doctores o asistentes médicos, por favor mejora tu plan a CONSULTORIO.");
+            }
+            
+            if ("CONSULTORIO".equals(plan) && staffClinicoActual >= 5) {
+                throw new BusinessException("LIMITE_PLAN_EXCEDIDO", 
+                    "Tu plan actual (CONSULTORIO) ha llegado al límite de 5 doctores. Por favor mejora a plan RED para personal ilimitado.");
+            }
+        }
+
+        // Validación de Recepcionistas para el plan SOLO
+        if (request.getRol() == UserRole.RECEPTIONIST) {
+            if ("SOLO".equals(plan)) {
+                long recepActuales = usuarioRepository.countByTenantIdAndRolAndRegBorrado(tenantId, UserRole.RECEPTIONIST, 1);
+                if (recepActuales >= 1) {
+                    throw new BusinessException("LIMITE_PLAN_EXCEDIDO", 
+                        "Tu plan actual (SOLO) solo permite tener 1 recepcionista. Para crecer tu equipo administrativo, te recomendamos el plan CONSULTORIO.");
+                }
+            }
+        }
+
         if (request.getRol() == UserRole.DOCTOR) {
-            long doctorCount = usuarioRepository.countByTenantIdAndRolAndRegBorrado(tenantId, UserRole.DOCTOR, 1);
-            if (doctorCount >= 3) {
-                throw new BusinessException("LIMITE_DOCTORES_EXCEDIDO",
-                        "Se ha alcanzado el límite máximo de 3 doctores permitidos por sucursal.");
-            }
-        } else if (request.getRol() == UserRole.RECEPTIONIST) {
-            long receptionistCount = usuarioRepository.countByTenantIdAndRolAndRegBorrado(tenantId,
-                    UserRole.RECEPTIONIST, 1);
-            if (receptionistCount >= 1) {
-                throw new BusinessException("LIMITE_RECEPCIONISTA_EXCEDIDO",
-                        "Ya existe un recepcionista registrado. Su plan solo permite 1.");
+            if (request.getEspecialidades() == null || request.getEspecialidades().isEmpty()) {
+                throw new BusinessException("ESPECIALIDAD_REQUERIDA", "Es obligatorio asignar al menos una especialidad al doctor.");
             }
         }
 
-        // 4. Validar verificación clínica obligatoria para Doctores
-        if (request.getRol() == UserRole.DOCTOR && Boolean.FALSE.equals(request.getEsPersonalClinico())) {
-            throw new BusinessException("VERIFICACION_CLINICA_REQUERIDA",
-                    "Es obligatorio certificar la idoneidad clínica para el rol de Doctor.");
-        }
-
-        // 5. Validar teléfono duplicado
+        // 4. Validar datos duplicados (Teléfono y Email)
         usuarioRepository.findByTelefonoContactoAndActive(request.getTelefonoContacto())
                 .ifPresent(u -> {
                     throw new BusinessException("TELEFONO_DUPLICADO",
-                            "Ya existe un usuario con este número de teléfono.");
+                            "Ya existe un integrante del equipo con este número de teléfono.");
                 });
+
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            usuarioRepository.findByEmailAndRegBorrado(request.getEmail(), 1)
+                    .ifPresent(u -> {
+                        throw new BusinessException("EMAIL_DUPLICADO",
+                                "Ya existe un usuario registrado con este correo electrónico.");
+                    });
+        }
 
         // 5. Crear entidad
         Usuario usuario = Usuario.builder()
@@ -87,14 +117,26 @@ public class UsuarioService {
                 .email(request.getEmail())
                 .rol(request.getRol())
                 .cedulaProfesional(request.getCedulaProfesional())
-                .fotografiaUrl(request.getFotografiaUrl())
-                .esPersonalClinico(request.getEsPersonalClinico() != null && request.getEsPersonalClinico())
-                .nipHash(passwordEncoder.encode(request.getNip()))
-                .requiereCambioNip(true) // Obligar a cambio de NIP
+                .especialidades(request.getEspecialidades() != null ? request.getEspecialidades().toArray(new String[0]) : null)
+                .genero(request.getGenero())
+                .nipHash(passwordEncoder.encode(nipGenerado))
+                .requiereCambioNip(true)
+                .activo(true)
                 .regBorrado(1)
                 .build();
 
-        return mapToResponse(usuarioRepository.save(usuario));
+        Usuario saved = usuarioRepository.save(usuario);
+
+        // 6. Notificar al nuevo colaborador
+        if (saved.getEmail() != null && !saved.getEmail().isBlank()) {
+            Map<String, String> vars = Map.of(
+                    "NOMBRE_USUARIO", saved.getNombreCompleto(),
+                    "TELEFONO", saved.getTelefonoContacto(),
+                    "NIP_TEMPORAL", nipGenerado);
+            notificationService.notifyDoctor(saved, NotificationType.BIENVENIDA_STAFF, vars);
+        }
+
+        return mapToResponse(saved);
     }
 
     @Transactional
@@ -102,48 +144,58 @@ public class UsuarioService {
     public UsuarioResponse actualizarUsuario(UUID id, UsuarioRequest request, UUID tenantId) {
         Usuario usuario = usuarioRepository.findById(id)
                 .filter(u -> u.getTenantId().equals(tenantId) && u.getRegBorrado() == 1)
-                .orElseThrow(() -> new BusinessException("USUARIO_NO_ENCONTRADO",
-                        "El usuario no existe o ha sido eliminado."));
+                .orElseThrow(() -> new BusinessException("USUARIO_NO_ENCONTRADO", "El usuario no existe."));
+
+        // Validar email duplicado si está cambiando
+        if (request.getEmail() != null && !request.getEmail().equalsIgnoreCase(usuario.getEmail())) {
+            usuarioRepository.findByEmailAndRegBorrado(request.getEmail(), 1)
+                    .ifPresent(u -> {
+                        if (!u.getId().equals(id)) {
+                            throw new BusinessException("EMAIL_DUPLICADO", "Este correo ya está siendo utilizado por otro usuario.");
+                        }
+                    });
+        }
 
         usuario.setNombreCompleto(request.getNombreCompleto());
         usuario.setEmail(request.getEmail());
+        
+        if (usuario.getRol() == UserRole.DOCTOR && (request.getEspecialidades() == null || request.getEspecialidades().isEmpty())) {
+            throw new BusinessException("ESPECIALIDAD_REQUERIDA", "Un doctor no puede quedarse sin especialidades.");
+        }
+
         usuario.setCedulaProfesional(request.getCedulaProfesional());
-        usuario.setFotografiaUrl(request.getFotografiaUrl());
-        usuario.setEsPersonalClinico(request.getEsPersonalClinico() != null && request.getEsPersonalClinico());
-
-        // Validar verificación clínica obligatoria tras actualización
-        if (usuario.getRol() == UserRole.DOCTOR && Boolean.FALSE.equals(usuario.getEsPersonalClinico())) {
-            throw new BusinessException("VERIFICACION_CLINICA_REQUERIDA",
-                    "Es obligatorio certificar la idoneidad clínica para el rol de Doctor.");
-        }
-
-        // Si se envía el NIP, validar y actualizar
-        if (request.getNip() != null && !request.getNip().isEmpty()) {
-            if (request.getNip().length() != 6 || !request.getNip().matches("\\d+")) {
-                throw new BusinessException("NIP_INVALIDO", "El NIP debe ser exactamente de 6 dígitos numéricos.");
-            }
-            usuario.setNipHash(passwordEncoder.encode(request.getNip()));
-            usuario.setRequiereCambioNip(true);
-        }
+        usuario.setGenero(request.getGenero());
+        usuario.setEspecialidades(request.getEspecialidades() != null ? request.getEspecialidades().toArray(new String[0]) : null);
 
         return mapToResponse(usuarioRepository.save(usuario));
     }
 
     @Transactional
-    @AuditAction(modulo = "USUARIOS", accion = "DESHABILITAR", descripcion = "Deshabilitación manual de usuario")
+    public UsuarioResponse cambiarEstadoActivo(UUID id, boolean status, UUID tenantId) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .filter(u -> u.getTenantId().equals(tenantId) && u.getRegBorrado() == 1)
+                .orElseThrow(() -> new BusinessException("USUARIO_NO_ENCONTRADO", "Usuario no encontrado."));
+
+        if (!status && usuario.getRol() == UserRole.OWNER) {
+            throw new BusinessException("ERROR", "No puedes desactivar al dueño.");
+        }
+
+        usuario.setActivo(status);
+        return mapToResponse(usuarioRepository.save(usuario));
+    }
+
+    @Transactional
     public void eliminarUsuario(UUID id, UUID tenantId) {
         Usuario usuario = usuarioRepository.findById(id)
                 .filter(u -> u.getTenantId().equals(tenantId) && u.getRegBorrado() == 1)
-                .orElseThrow(() -> new BusinessException("USUARIO_NO_ENCONTRADO",
-                        "El usuario no existe o ya ha sido deshabilitado."));
+                .orElseThrow(() -> new BusinessException("USUARIO_NO_ENCONTRADO", "Usuario no encontrado."));
 
-        // Protección: No se puede deshabilitar al OWNER
         if (usuario.getRol() == UserRole.OWNER) {
-            throw new BusinessException("OPERACION_NO_PERMITIDA",
-                    "No es posible deshabilitar al propietario principal de la clínica.");
+            throw new BusinessException("ERROR", "No puedes borrar al dueño.");
         }
 
-        usuario.setRegBorrado(0); // Deshabilitar (Soft delete)
+        usuario.setRegBorrado(0);
+        usuario.setActivo(false);
         usuarioRepository.save(usuario);
     }
 
@@ -155,9 +207,10 @@ public class UsuarioService {
                 .email(usuario.getEmail())
                 .rol(usuario.getRol())
                 .cedulaProfesional(usuario.getCedulaProfesional())
-                .fotografiaUrl(usuario.getFotografiaUrl())
-                .esPersonalClinico(usuario.getEsPersonalClinico())
+                .activo(usuario.getActivo())
+                .especialidades(usuario.getEspecialidades() != null ? java.util.Arrays.asList(usuario.getEspecialidades()) : java.util.Collections.emptyList())
                 .sucursalIdPrincipal(usuario.getSucursalIdPrincipal())
+                .genero(usuario.getGenero())
                 .requiereCambioNip(usuario.getRequiereCambioNip())
                 .createdAt(usuario.getCreatedAt())
                 .build();

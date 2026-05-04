@@ -24,6 +24,10 @@ public class Pago extends BaseEntity {
     @JdbcTypeCode(SqlTypes.UUID)
     private UUID citaId;
 
+    @Column(name = "doctor_id")
+    @JdbcTypeCode(SqlTypes.UUID)
+    private UUID doctorId;
+
     @Column(name = "paciente_id", nullable = false)
     @JdbcTypeCode(SqlTypes.UUID)
     private UUID pacienteId;

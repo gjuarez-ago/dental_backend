@@ -11,7 +11,7 @@
 INSERT INTO empresas (id, nombre_comercial, plan_suscripcion, estado_cuenta, reg_borrado, created_at, updated_at)
 VALUES (
     '550e8400-e29b-41d4-a716-446655440000', 
-    'Sarai Rios - Dental Studio', 
+    'Sarai Rios - Dental Sonrisana', 
     'ELITE', 
     true, 
     1, 
@@ -45,7 +45,7 @@ VALUES (
     '550e8400-e29b-41d4-a716-446655440001', 
     'OWNER', 
     '9991234567', 
-    'sarai.rios@dentalstudio.com',
+    'sarai.rios@sonrisana.site',
     '$2a$10$8.IlnEVC.O776G1/Z1lV2uW3r5E.iGkH.0e/ZzU8D9O3a.0E6VpEi', 
     false, 
     'Sarai Rios', 

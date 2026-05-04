@@ -23,6 +23,11 @@ public class ClinicalConfigDTO {
     private String banco;
     private String cuentaBancaria;
     private String clabeInterbancaria;
+    private String direccionSucursal;
+    
+    // De la tabla Empresa (Global)
+    private String telefonoWhatsApp;
+    private Integer horasAnticipacionCancelacion;
 
     @Data
     @Builder

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Cita Confirmada</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f6f9;">
+    <tr>
+        <td align="center" style="padding:24px 16px;">
+            <table role="presentation" width="580" cellspacing="0" cellpadding="0" border="0" style="max-width:580px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+
+                <!-- HEADER -->
+                <tr>
+                    <td style="background:linear-gradient(135deg,#0f766e,#0d9488);padding:28px 32px;text-align:center;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td align="center" style="padding-bottom:16px;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;background-color:#ffffff;border-radius:12px;padding:12px;">
+                                        <tr><td align="center">
+                                            <!-- Usa el logo dinámico o el por defecto provisto en NotificationService -->
+                                            <img src="{{LOGO_URL}}" alt="Logo" width="120" style="display:block; max-width:100%; height:auto;" />
+                                        </td></tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr><td align="center" style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">{{NOMBRE_CLINICA}}</td></tr>
+                            <tr><td align="center" style="font-size:13px;color:#ccfbf1;padding-top:4px;">Confirmación de Cita</td></tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- CUERPO -->
+                <tr>
+                    <td style="padding:32px 32px 16px 32px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr><td style="font-size:18px;font-weight:700;color:#1e293b;padding-bottom:8px;">¡Hola, {{NOMBRE_PACIENTE}}!</td></tr>
+                            <tr><td style="font-size:14px;color:#64748b;line-height:22px;padding-bottom:24px;">Tu cita ha sido confirmada exitosamente. Aquí tienes los detalles:</td></tr>
+                        </table>
+
+                        <!-- Tarjeta de detalles -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f0fdfa;border:1px solid #ccfbf1;border-radius:8px;">
+                            <tr>
+                                <td style="padding:20px 24px;">
+                                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                        <!-- Folio -->
+                                        <tr>
+                                            <td style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Folio</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-size:16px;font-weight:700;color:#0f766e;padding-bottom:16px;">{{FOLIO_CITA}}</td>
+                                        </tr>
+                                        <!-- Fecha y Hora -->
+                                        <tr>
+                                            <td style="padding-bottom:12px;">
+                                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                                    <tr>
+                                                        <td width="50%" style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Fecha</td>
+                                                        <td width="50%" style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Hora</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size:15px;font-weight:600;color:#1e293b;padding-top:4px;">{{FECHA_CITA}}</td>
+                                                        <td style="font-size:15px;font-weight:600;color:#1e293b;padding-top:4px;">{{HORA_CITA}}</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <!-- Servicio -->
+                                        <tr>
+                                            <td style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Servicio</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-size:15px;font-weight:600;color:#1e293b;padding-bottom:16px;">{{SERVICIO}}</td>
+                                        </tr>
+                                        <!-- Doctor -->
+                                        <tr>
+                                            <td style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Doctor</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-size:15px;font-weight:600;color:#1e293b;padding-bottom:16px;">{{NOMBRE_DOCTOR}}</td>
+                                        </tr>
+                                        <!-- Sucursal -->
+                                        <tr>
+                                            <td style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Sucursal</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-size:15px;font-weight:600;color:#1e293b;">{{NOMBRE_SUCURSAL}}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- NOTA -->
+                <tr>
+                    <td style="padding:0 32px 32px 32px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
+                            <tr>
+                                <td style="padding:14px 20px;font-size:13px;color:#92400e;line-height:20px;">
+                                    ⚠️ <strong>Importante:</strong> Si necesitas cancelar o reagendar, hazlo con al menos 24 horas de anticipación directamente al número de la clínica o por WhatsApp.
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                    <td style="background-color:#f8fafc;padding:24px 32px;border-top:1px solid #e2e8f0;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td align="center" style="font-size:13px;color:#475569;line-height:20px;font-weight:600;padding-bottom:8px;">
+                                    {{NOMBRE_CLINICA}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="font-size:12px;color:#64748b;line-height:18px;">
+                                    📞 Teléfono de atención: <strong>{{TELEFONO_CLINICA}}</strong><br>
+                                    🌐 <a href="{{SITIO_WEB}}" style="color:#0ea5e9;text-decoration:none;">{{SITIO_WEB}}</a>
+                                </td>
+                            </tr>
+                            <tr><td align="center" style="font-size:11px;color:#cbd5e1;padding-top:16px;">Este correo fue enviado automáticamente. Por favor no responda a este mensaje.</td></tr>
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

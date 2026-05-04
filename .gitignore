@@ -5,6 +5,8 @@
 /tmp
 /out-tsc
 /bazel-out
+target/
+*.class
 
 # Node
 /node_modules
@@ -43,9 +45,8 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-target/
-.idea/
-*.class
-.settings/
-.project
-.classpath
+# Secrets and environment variables
+.env
+src/.env
+.env.example
+!.env.example

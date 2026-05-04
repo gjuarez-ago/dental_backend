@@ -9,6 +9,7 @@ import com.meyisoft.dental.system.enums.AppointmentStatus;
 import com.meyisoft.dental.system.enums.PagoStatus;
 import com.meyisoft.dental.system.models.dto.CitaDTO;
 import com.meyisoft.dental.system.models.dto.CitaPatientDTO;
+import com.meyisoft.dental.system.models.dto.TimelineEntryDTO;
 import com.meyisoft.dental.system.models.request.PatientBookRequest;
 import com.meyisoft.dental.system.repository.*;
 import com.meyisoft.dental.system.service.StorageService;
@@ -39,12 +40,15 @@ public class PatientPortalService {
     private final PasswordEncoder passwordEncoder;
     private final CitaService citaService; // Para reutilizar lógica de cancelación
     private final StorageService storageService;
+    private final ConsultaMedicaRepository consultaMedicaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Transactional(readOnly = true)
     public List<CitaPatientDTO> getMyAppointments(String telefono, String email) {
         log.info("Consultando citas globales para paciente: {} / {}", telefono, email);
-        
-        // 1. Buscar todos los registros de paciente que coincidan con teléfono o email en toda la red
+
+        // 1. Buscar todos los registros de paciente que coincidan con teléfono o email
+        // en toda la red
         List<Paciente> pacientes = new ArrayList<>();
         if (telefono != null) {
             pacientes.addAll(pacienteRepository.findAllByTelefonoAndRegBorrado(telefono, 1));
@@ -61,7 +65,7 @@ public class PatientPortalService {
 
         // 2. Por cada paciente encontrado, obtener sus citas
         List<CitaPatientDTO> todasLasCitas = new ArrayList<>();
-        
+
         for (Paciente p : pacientes) {
             List<Cita> citas = citaRepository.findByPacienteIdAndRegBorrado(p.getId(), 1);
             for (Cita c : citas) {
@@ -75,16 +79,86 @@ public class PatientPortalService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<TimelineEntryDTO> getMedicalHistory(UUID pacienteId) {
+        // 1. Obtener todas las citas del paciente que no estén borradas
+        List<Cita> citas = citaRepository.findByPacienteIdAndRegBorrado(pacienteId, 1);
+
+        return citas.stream()
+                .map((Cita cita) -> {
+                    // 2. Buscar si tiene consulta médica asociada (ficha clínica)
+                    com.meyisoft.dental.system.entity.ConsultaMedica consulta = consultaMedicaRepository
+                            .findByCitaIdAndRegBorrado(cita.getId(), 1)
+                            .stream().findFirst().orElse(null);
+
+                    // 3. Obtener info del doctor
+                    String doctorNombre = "Por asignar";
+                    String doctorGenero = "MASCULINO"; // Default
+                    if (cita.getDoctorId() != null) {
+                        java.util.Optional<com.meyisoft.dental.system.entity.Usuario> docOpt = usuarioRepository.findById(cita.getDoctorId());
+                        if (docOpt.isPresent()) {
+                            doctorNombre = docOpt.get().getNombreCompleto();
+                            doctorGenero = docOpt.get().getGenero();
+                        }
+                    }
+
+                    // 4. Obtener nombre del servicio
+                    String servicioNombre = "Consulta General";
+                    if (cita.getServicioId() != null) {
+                        java.util.Optional<com.meyisoft.dental.system.entity.ServicioDental> servOpt = servicioRepository.findById(cita.getServicioId());
+                        if (servOpt.isPresent()) servicioNombre = servOpt.get().getNombre();
+                    }
+
+                    // 5. Calcular balance
+                    List<Pago> pagos = pagoRepository.findByCitaIdAndRegBorrado(cita.getId(), 1);
+                    BigDecimal pagado = pagos.stream()
+                            .filter(p -> p.getStatus() == PagoStatus.APROBADO
+                                    || p.getStatus() == PagoStatus.PENDIENTE_REVISION)
+                            .map(p -> p.getMonto())
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    BigDecimal total = cita.getMontoTotal() != null ? cita.getMontoTotal() : BigDecimal.ZERO;
+                    BigDecimal pendiente = total.subtract(pagado);
+
+                    // 6. Calcular duración si hay consulta
+                    Integer duracion = null;
+                    if (consulta != null && consulta.getAtencionInicio() != null && consulta.getAtencionFin() != null) {
+                        duracion = (int) java.time.Duration
+                                .between(consulta.getAtencionInicio(), consulta.getAtencionFin()).toMinutes();
+                    }
+
+                    return TimelineEntryDTO.builder()
+                            .citaId(cita.getId())
+                            .folio(cita.getFolio())
+                            .fecha(cita.getFechaHora())
+                            .servicioNombre(servicioNombre)
+                            .doctorNombre(doctorNombre)
+                            .doctorGenero(doctorGenero)
+                            .estado(cita.getEstado())
+                            .diagnostico(consulta != null ? consulta.getDiagnostico() : null)
+                            .procedimiento(consulta != null ? consulta.getProcedimientoRealizado() : null)
+                            .recomendaciones(consulta != null ? consulta.getIndicaciones() : null)
+                            .medicamentos(consulta != null ? consulta.getPrescripcionMedica() : null)
+                            .duracionMinutos(duracion)
+                            .montoTotal(total)
+                            .montoPagado(pagado)
+                            .saldoPendiente(pendiente.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : pendiente)
+                            .build();
+                })
+                .sorted((e1, e2) -> e2.getFecha().compareTo(e1.getFecha()))
+                .collect(Collectors.toList());
+    }
+
     private CitaPatientDTO mapToPatientDTO(Cita cita, UUID tenantId) {
         Empresa empresa = empresaRepository.findById(tenantId).orElse(null);
         Sucursal sucursal = sucursalRepository.findById(cita.getSucursalId()).orElse(null);
         var servicio = servicioRepository.findById(cita.getServicioId()).orElse(null);
-        
+
         // Cálculo financiero en tiempo real
         List<Pago> pagos = pagoRepository.findByCitaIdAndRegBorrado(cita.getId(), 1);
         BigDecimal pagado = pagos.stream()
-                .filter(p -> p.getStatus() == com.meyisoft.dental.system.enums.PagoStatus.APROBADO || 
-                            p.getStatus() == com.meyisoft.dental.system.enums.PagoStatus.PENDIENTE_REVISION)
+                .filter(p -> p.getStatus() == com.meyisoft.dental.system.enums.PagoStatus.APROBADO ||
+                        p.getStatus() == com.meyisoft.dental.system.enums.PagoStatus.PENDIENTE_REVISION)
                 .map(com.meyisoft.dental.system.entity.Pago::getMonto)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -92,16 +166,28 @@ public class PatientPortalService {
         BigDecimal pendiente = total.subtract(pagado);
 
         // Lógica de cancelación realista
-        boolean permiteCancelar = (cita.getEstado() == AppointmentStatus.POR_CONFIRMAR || 
-                                 cita.getEstado() == AppointmentStatus.CONFIRMADA) && 
-                                 cita.getFechaHora().isAfter(OffsetDateTime.now().plusHours(24));
+        boolean permiteCancelar = (cita.getEstado() == AppointmentStatus.POR_CONFIRMAR ||
+                cita.getEstado() == AppointmentStatus.CONFIRMADA) &&
+                cita.getFechaHora().isAfter(OffsetDateTime.now().plusHours(24));
 
         String mensajeCancelacion = "";
         if (!permiteCancelar) {
             if (cita.getFechaHora().isBefore(OffsetDateTime.now().plusHours(24))) {
                 mensajeCancelacion = "Favor de contactar a la clínica para cancelaciones con menos de 24h de antelación.";
-            } else if (cita.getEstado() != AppointmentStatus.POR_CONFIRMAR && cita.getEstado() != AppointmentStatus.CONFIRMADA) {
+            } else if (cita.getEstado() != AppointmentStatus.POR_CONFIRMAR
+                    && cita.getEstado() != AppointmentStatus.CONFIRMADA) {
                 mensajeCancelacion = "La cita ya se encuentra en un estado que no permite cancelación automática.";
+            }
+        }
+
+        // Obtener info del doctor
+        String doctorNombre = "Por asignar";
+        String doctorGenero = "MASCULINO";
+        if (cita.getDoctorId() != null) {
+            java.util.Optional<com.meyisoft.dental.system.entity.Usuario> docOpt = usuarioRepository.findById(cita.getDoctorId());
+            if (docOpt.isPresent()) {
+                doctorNombre = docOpt.get().getNombreCompleto();
+                doctorGenero = docOpt.get().getGenero();
             }
         }
 
@@ -112,6 +198,8 @@ public class PatientPortalService {
                 .sucursalNombre(sucursal != null ? sucursal.getNombreSucursal() : "Sucursal Principal")
                 .sucursalTelefono(sucursal != null ? sucursal.getTelefono() : null)
                 .servicioNombre(servicio != null ? servicio.getNombre() : "Consulta")
+                .doctorNombre(doctorNombre)
+                .doctorGenero(doctorGenero)
                 .fechaHora(cita.getFechaHora())
                 .estado(cita.getEstado())
                 .montoBase(total)
@@ -127,8 +215,8 @@ public class PatientPortalService {
         Cita cita = citaRepository.findById(citaId)
                 .filter(c -> c.getRegBorrado() == 1)
                 .orElseThrow(() -> new RuntimeException("Cita no encontrada"));
-                
-        citaService.cancelarCita(citaId, motivo, cita.getTenantId());
+
+        citaService.cancelarCita(citaId, motivo, cita.getTenantId(), true);
     }
 
     @Transactional
@@ -137,12 +225,13 @@ public class PatientPortalService {
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
 
         String hashedPin = passwordEncoder.encode(newPin);
-        
+
         // Sincronización global por Teléfono
         List<Paciente> vinculados = pacienteRepository.findAllByTelefonoAndRegBorrado(current.getTelefono(), 1);
-        
-        log.info("Sincronizando perfil para {} registros vinculados al teléfono {}", vinculados.size(), current.getTelefono());
-        
+
+        log.info("Sincronizando perfil para {} registros vinculados al teléfono {}", vinculados.size(),
+                current.getTelefono());
+
         for (Paciente p : vinculados) {
             p.setPinHash(hashedPin);
             p.setEmail(email);
@@ -153,7 +242,8 @@ public class PatientPortalService {
     }
 
     @Transactional
-    public CitaDTO bookAppointmentFromPortalWithFile(UUID pacienteId, PatientBookRequest request, org.springframework.web.multipart.MultipartFile file) {
+    public CitaDTO bookAppointmentFromPortalWithFile(UUID pacienteId, PatientBookRequest request,
+            org.springframework.web.multipart.MultipartFile file) {
         // 1. Subir el ticket obligatoriamente
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("El ticket de pago es obligatorio");

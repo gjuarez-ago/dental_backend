@@ -17,6 +17,7 @@ import java.util.UUID;
 public class CitaResumenFinancieroDTO {
 
     private UUID citaId;
+    private UUID doctorId;
     private String pacienteNombre;
     private String servicioNombre;
     private BigDecimal precioBase;

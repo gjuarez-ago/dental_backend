@@ -27,12 +27,19 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> {}) // Pick up CorsConfig
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/public/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/v1/public/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "OWNER")
                 .requestMatchers("/api/v1/store/**").permitAll() // Secure internally based on Tenant logic
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"ok\": false, \"errorCode\": \"UNAUTHORIZED\", \"userMessage\": \"Sesión no válida o expirada.\"}");
+                })
+            )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

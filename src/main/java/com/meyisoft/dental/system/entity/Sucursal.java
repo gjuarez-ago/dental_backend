@@ -35,7 +35,14 @@ public class Sucursal extends BaseEntity {
     @Column(name = "telefono", length = 20)
     private String telefono;
 
+    @Column(name = "direccion", columnDefinition = "TEXT")
+    private String direccion;
+
     @Column(name = "ventana_cancelacion")
     @Builder.Default
     private Integer ventanaCancelacion = 24; // Tiempo en horas para cambios de último momento
+
+    @Column(name = "capacidad_atencion")
+    @Builder.Default
+    private Integer capacidadAtencion = 2; // Número de sillones, unidades dentales o cubículos simultáneos físicos
 }

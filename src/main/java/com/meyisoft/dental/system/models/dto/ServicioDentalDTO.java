@@ -21,4 +21,7 @@ public class ServicioDentalDTO {
     private String colorEtiqueta;
     private String imagenUrl;
     private Boolean requiereValoracion;
+    private String giro;
+    private String especialidadRequerida;
+    private Boolean procedimientoQuirurgico;
 }

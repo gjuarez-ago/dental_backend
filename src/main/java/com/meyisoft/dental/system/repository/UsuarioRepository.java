@@ -22,4 +22,13 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     long countByTenantIdAndRolAndRegBorrado(UUID tenantId, com.meyisoft.dental.system.enums.UserRole rol, Integer regBorrado);
 
     java.util.List<Usuario> findByTenantIdAndSucursalIdPrincipalAndRegBorrado(UUID tenantId, UUID sucursalId, Integer regBorrado);
+
+    java.util.List<Usuario> findByTenantIdAndRegBorrado(UUID tenantId, Integer regBorrado);
+
+    java.util.Optional<Usuario> findByEmailAndRegBorrado(String email, Integer regBorrado);
+
+    @Query("SELECT COUNT(u) FROM Usuario u WHERE u.tenantId = :tenantId AND u.esPersonalClinico = true AND u.regBorrado = 1")
+    long countClinicalStaffByTenant(@Param("tenantId") UUID tenantId);
+
+    java.util.List<Usuario> findByRolAndActivoAndRegBorrado(com.meyisoft.dental.system.enums.UserRole rol, Boolean activo, Integer regBorrado);
 }

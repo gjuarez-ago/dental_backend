@@ -44,6 +44,8 @@ public class ServicioDentalService {
                 .colorEtiqueta(dto.getColorEtiqueta())
                 .imagenUrl(dto.getImagenUrl())
                 .requiereValoracion(dto.getRequiereValoracion() != null ? dto.getRequiereValoracion() : false)
+                .giro(dto.getGiro() != null ? dto.getGiro() : "DENTAL")
+                .especialidadRequerida(dto.getEspecialidadRequerida())
                 .build();
 
         entity.setTenantId(tenantId);
@@ -82,6 +84,14 @@ public class ServicioDentalService {
             entity.setRequiereValoracion(dto.getRequiereValoracion());
         }
 
+        if (dto.getGiro() != null) {
+            entity.setGiro(dto.getGiro());
+        }
+
+        if (dto.getEspecialidadRequerida() != null) {
+            entity.setEspecialidadRequerida(dto.getEspecialidadRequerida());
+        }
+
         return mapToDTO(repository.save(entity));
     }
 
@@ -115,6 +125,8 @@ public class ServicioDentalService {
                 .colorEtiqueta(entity.getColorEtiqueta())
                 .imagenUrl(entity.getImagenUrl())
                 .requiereValoracion(entity.getRequiereValoracion())
+                .giro(entity.getGiro())
+                .especialidadRequerida(entity.getEspecialidadRequerida())
                 .build();
     }
 }

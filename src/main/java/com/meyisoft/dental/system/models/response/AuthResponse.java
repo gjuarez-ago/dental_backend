@@ -10,4 +10,7 @@ public class AuthResponse {
     @Builder.Default
     private String type = "Bearer";
     private Object user; // Optional details
+    private String giro;
+    private String plan;
+    private String temporaryPin;
 }

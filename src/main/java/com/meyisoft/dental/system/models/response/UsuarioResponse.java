@@ -23,7 +23,9 @@ public class UsuarioResponse {
     private String fotografiaUrl;
     private Boolean esPersonalClinico;
     private UUID sucursalIdPrincipal;
+    private String genero;
     private Boolean requiereCambioNip;
+    private Boolean activo;
+    private java.util.List<String> especialidades;
     private OffsetDateTime createdAt;
 }
-

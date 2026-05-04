@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -27,16 +26,17 @@ public class AuditAspect {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
-                
+
                 UUID tenantId = principal.getTenantId();
                 UUID executorId = principal.getUserId();
-                
+
                 String description = auditAction.descripcion();
                 if (description.isEmpty()) {
                     description = "Acción automática en " + joinPoint.getSignature().getName();
                 }
 
-                // Si el método tiene parámetros, podríamos intentar extraer IDs específicos si fuera necesario
+                // Si el método tiene parámetros, podríamos intentar extraer IDs específicos si
+                // fuera necesario
                 // por ahora usamos la descripción de la anotación.
 
                 bitacoraService.registrar(

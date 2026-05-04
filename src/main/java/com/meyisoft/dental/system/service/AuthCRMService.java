@@ -8,6 +8,8 @@ import com.meyisoft.dental.system.models.response.AuthResponse;
 import com.meyisoft.dental.system.repository.EmpresaRepository;
 import com.meyisoft.dental.system.repository.UsuarioRepository;
 import com.meyisoft.dental.system.repository.PacienteRepository;
+import com.meyisoft.dental.system.models.dto.UsuarioDTO;
+import com.meyisoft.dental.system.models.dto.PacienteDTO;
 import com.meyisoft.dental.system.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,12 +41,50 @@ public class AuthCRMService {
         
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
+            
+            // 1.1 Validar que el usuario esté habilitado
+            if (Boolean.FALSE.equals(usuario.getActivo())) {
+                throw new BusinessException("USUARIO_DESHABILITADO", 
+                    "USUARIO DESACTIVADO: No tienes permiso para entrar al sistema en este momento.", 
+                    HttpStatus.FORBIDDEN);
+            }
+
+            // 1.2 Obtener Empresa (Una sola vez para todo el flujo)
+            Empresa empresa = empresaRepository.findById(usuario.getTenantId()).orElse(null);
+
+            // 1.3 Validar que la clínica esté habilitada
+            if (empresa != null && Boolean.FALSE.equals(empresa.getActivo())) {
+                throw new BusinessException("CLINICA_SUSPENDIDA", 
+                    "SERVICIO SUSPENDIDO: El acceso para toda la clínica ha sido desactivado.", 
+                    HttpStatus.FORBIDDEN);
+            }
+
             if (!passwordEncoder.matches(request.getNip(), usuario.getNipHash())) {
                 throw new BusinessException(ErrorCodes.AUTH_INVALID_CREDENTIALS, "Credenciales inválidas", HttpStatus.UNAUTHORIZED);
             }
+
+            String giro = empresa != null ? empresa.getGiro() : "GENERAL";
+            String plan = empresa != null ? (empresa.getPlanSuscripcion() != null ? empresa.getPlanSuscripcion() : "SOLO") : "SOLO";
+
+            // 1.4 Mapear a DTO (Seguridad: No exponer la entidad JPA)
+            UsuarioDTO userDto = UsuarioDTO.builder()
+                    .id(usuario.getId())
+                    .nombreCompleto(usuario.getNombreCompleto())
+                    .email(usuario.getEmail())
+                    .telefonoContacto(usuario.getTelefonoContacto())
+                    .rol(usuario.getRol())
+                    .tenantId(usuario.getTenantId())
+                    .sucursalIdPrincipal(usuario.getSucursalIdPrincipal())
+                    .activo(usuario.getActivo())
+                    .esPersonalClinico(usuario.getEsPersonalClinico())
+                    .especialidades(usuario.getEspecialidades())
+                    .build();
+
             return AuthResponse.builder()
                     .token(jwtUtil.generateTokenForCRM(usuario.getId(), usuario.getTenantId(), usuario.getRol(), usuario.getSucursalIdPrincipal()))
-                    .user(usuario)
+                    .user(userDto)
+                    .giro(giro)
+                    .plan(plan)
                     .build();
         }
 
@@ -55,10 +95,18 @@ public class AuthCRMService {
             if (!passwordEncoder.matches(request.getNip(), paciente.getPinHash())) {
                 throw new BusinessException(ErrorCodes.AUTH_INVALID_CREDENTIALS, "PIN inválido", HttpStatus.UNAUTHORIZED);
             }
+
+            // Mapear a DTO
+            PacienteDTO pacienteDto = PacienteDTO.builder()
+                    .id(paciente.getId())
+                    .nombreCompleto(paciente.getNombreCompleto())
+                    .telefono(paciente.getTelefono())
+                    .email(paciente.getEmail())
+                    .build();
             
             return AuthResponse.builder()
                     .token(jwtUtil.generateTokenForPatient(paciente.getId(), paciente.getTelefono(), paciente.getEmail()))
-                    .user(paciente)
+                    .user(pacienteDto)
                     .build();
         }
 

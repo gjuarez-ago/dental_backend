@@ -43,6 +43,14 @@ public class UsuarioController {
         return ApiResponse.success(usuarioService.actualizarUsuario(id, request, principal.getTenantId()));
     }
 
+    @PatchMapping("/{id}/status")
+    public ApiResponse<UsuarioResponse> cambiarEstado(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id,
+            @RequestParam boolean activo) {
+        return ApiResponse.success(usuarioService.cambiarEstadoActivo(id, activo, principal.getTenantId()));
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<Void> eliminar(
             @AuthenticationPrincipal UserPrincipal principal,

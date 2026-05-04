@@ -22,4 +22,6 @@ public class UsuarioRequest {
     private String fotografiaUrl;
     private Boolean esPersonalClinico;
     private UUID sucursalId;
+    private String genero;
+    private java.util.List<String> especialidades;
 }

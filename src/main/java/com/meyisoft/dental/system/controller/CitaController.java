@@ -67,9 +67,10 @@ public class CitaController {
     @GetMapping("/doctores")
     @Operation(summary = "Listar doctores del tenant")
     public ResponseEntity<ApiResponse<List<Usuario>>> getDoctores(
-            @AuthenticationPrincipal UserPrincipal principal) {
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) UUID servicioId) {
         
-        List<Usuario> result = service.listarDoctores(principal.getTenantId());
+        List<Usuario> result = service.listarDoctores(principal.getTenantId(), servicioId);
         
         return ResponseEntity.ok(ApiResponse.<List<Usuario>>builder()
                 .ok(true)
@@ -164,9 +165,28 @@ public class CitaController {
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime nuevaFechaHora,
-            @RequestParam(required = false) Integer nuevaDuracion) {
+            @RequestParam(required = false) Integer nuevaDuracion,
+            @RequestParam(required = false) java.math.BigDecimal montoTotal) {
         
-        CitaDTO result = service.reprogramar(id, nuevaFechaHora, nuevaDuracion, principal.getTenantId());
+        CitaDTO result = service.reprogramar(id, nuevaFechaHora, nuevaDuracion, montoTotal, principal.getTenantId());
+        
+        return ResponseEntity.ok(ApiResponse.<CitaDTO>builder()
+                .ok(true)
+                .result(result)
+                .timestamp(OffsetDateTime.now())
+                .build());
+    }
+
+    @PatchMapping("/{id}/cancelar")
+    @Operation(summary = "Cancelar una cita confirmada")
+    public ResponseEntity<ApiResponse<CitaDTO>> cancelarCita(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable UUID id,
+            @RequestParam(required = false) String motivo,
+            @RequestParam(defaultValue = "true") boolean reembolsar) {
+        
+        String finalMotivo = (motivo != null && !motivo.isBlank()) ? motivo : "Cancelación administrativa";
+        CitaDTO result = service.cancelarCita(id, finalMotivo, principal.getTenantId(), reembolsar);
         
         return ResponseEntity.ok(ApiResponse.<CitaDTO>builder()
                 .ok(true)

@@ -14,12 +14,18 @@ import java.util.UUID;
 @Repository
 public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
     
-    @Query("SELECT COUNT(p) FROM Paciente p WHERE p.tenantId = :tenantId " +
-           "AND p.regBorrado = 1 AND p.createdAt BETWEEN :start AND :end")
-    long countNewPatientsByRange(
-            @Param("tenantId") UUID tenantId, 
-            @Param("start") OffsetDateTime start, 
-            @Param("end") OffsetDateTime end);
+
+    @Query("SELECT " +
+           "COUNT(CASE WHEN p.createdAt BETWEEN :todayStart AND :todayEnd THEN 1 END) as pacientesHoy, " +
+           "COUNT(CASE WHEN p.createdAt BETWEEN :yesterdayStart AND :yesterdayEnd THEN 1 END) as pacientesAyer " +
+           "FROM Paciente p " +
+           "WHERE p.tenantId = :tenantId AND p.regBorrado = 1")
+    DashboardPacienteStats findDashboardPacienteStats(
+            @Param("tenantId") UUID tenantId,
+            @Param("todayStart") OffsetDateTime todayStart,
+            @Param("todayEnd") OffsetDateTime todayEnd,
+            @Param("yesterdayStart") OffsetDateTime yesterdayStart,
+            @Param("yesterdayEnd") OffsetDateTime yesterdayEnd);
 
     List<Paciente> findByTenantIdAndRegBorrado(UUID tenantId, Integer regBorrado);
     

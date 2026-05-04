@@ -56,4 +56,14 @@ public class Usuario extends BaseEntity {
     @Column(name = "es_personal_clinico")
     @Builder.Default
     private Boolean esPersonalClinico = false;
+
+    @Column(name = "activo")
+    @Builder.Default
+    private Boolean activo = true;
+
+    @Column(name = "genero")
+    private String genero; // MASCULINO, FEMENINO, OTRO
+
+    @Column(name = "especialidades", columnDefinition = "text[]")
+    private String[] especialidades;
 }

@@ -35,7 +35,11 @@ public class CitaDTO {
     // Información financiera básica
     private java.math.BigDecimal montoTotal;
     private java.math.BigDecimal montoPagado;
+    private java.math.BigDecimal precioServicio;
+    private TicketStatus ticketStatus;
     private String motivoRechazo;
-    private String comprobanteUrl; // Para auditoría en el Dashboard
-    private String referenciaPago; // Referencia de transferencia para agendamiento remoto
+    private String comprobanteUrl;
+    private String referenciaPago;
+    private Boolean procedimientoQuirurgico;
+    private OffsetDateTime createdAt;
 }

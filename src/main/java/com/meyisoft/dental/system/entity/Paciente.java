@@ -5,8 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.math.BigDecimal;
 
 @Data
@@ -63,6 +63,19 @@ public class Paciente extends BaseEntity {
     @Column(name = "notas_clinicas", columnDefinition = "TEXT")
     private String notasClinicas;
 
+    @Column(name = "antecedentes_heredofamiliares", columnDefinition = "TEXT")
+    private String antecedentesHeredofamiliares;
+
+    @Column(name = "antecedentes_no_patologicos", columnDefinition = "TEXT")
+    private String antecedentesNoPatologicos;
+
+    @Column(name = "aceptacion_privacidad", nullable = false)
+    @Builder.Default
+    private Boolean aceptacionPrivacidad = false;
+
+    @Column(name = "fecha_aceptacion_privacidad")
+    private OffsetDateTime fechaAceptacionPrivacidad;
+
     @Column(name = "saldo_pendiente", nullable = false, precision = 19, scale = 2)
     @Builder.Default
     private BigDecimal saldoPendiente = BigDecimal.ZERO;
@@ -81,4 +94,16 @@ public class Paciente extends BaseEntity {
     @Column(name = "email_verificado")
     @Builder.Default
     private Boolean emailVerificado = false;
+
+    @Column(name = "rfc", length = 13)
+    private String rfc;
+
+    @Column(name = "razon_social_fiscal")
+    private String razonSocialFiscal;
+
+    @Column(name = "codigo_postal_fiscal", length = 5)
+    private String codigoPostalFiscal;
+
+    @Column(name = "regimen_fiscal")
+    private String regimenFiscal;
 }

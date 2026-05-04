@@ -3,6 +3,7 @@ package com.meyisoft.dental.system.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.meyisoft.dental.system.entity.Empresa;
 import com.meyisoft.dental.system.entity.Sucursal;
 import com.meyisoft.dental.system.entity.Usuario;
 import com.meyisoft.dental.system.exception.BusinessException;
@@ -27,6 +28,7 @@ public class ClinicalConfigService {
 
     private final UsuarioRepository usuarioRepository;
     private final SucursalRepository sucursalRepository;
+    private final com.meyisoft.dental.system.repository.EmpresaRepository empresaRepository;
     private final ObjectMapper objectMapper;
 
     /**
@@ -52,6 +54,9 @@ public class ClinicalConfigService {
         Sucursal sucursal = sucursalRepository.findById(targetSucursalId)
                 .orElseThrow(() -> new BusinessException(ErrorCodes.USER_NOT_FOUND, "Sucursal no encontrada", HttpStatus.NOT_FOUND));
 
+        Empresa empresa = empresaRepository.findById(usuario.getTenantId())
+                .orElseThrow(() -> new BusinessException(ErrorCodes.USER_NOT_FOUND, "Empresa no encontrada", HttpStatus.NOT_FOUND));
+
         Map<String, ClinicalConfigDTO.DayConfigDTO> horariosMap = parseHorarios(sucursal.getHorariosLaborales());
 
         return ClinicalConfigDTO.builder()
@@ -62,6 +67,9 @@ public class ClinicalConfigService {
                 .banco(sucursal.getBanco())
                 .cuentaBancaria(sucursal.getCuentaBancaria())
                 .clabeInterbancaria(sucursal.getClabeInterbancaria())
+                .direccionSucursal(sucursal.getDireccion())
+                .telefonoWhatsApp(empresa.getTelefonoWhatsApp())
+                .horasAnticipacionCancelacion(empresa.getHorasAnticipacionCancelacion())
                 .build();
     }
 
@@ -90,6 +98,7 @@ public class ClinicalConfigService {
             sucursal.setBanco(dto.getBanco());
             sucursal.setCuentaBancaria(dto.getCuentaBancaria());
             sucursal.setClabeInterbancaria(dto.getClabeInterbancaria());
+            sucursal.setDireccion(dto.getDireccionSucursal());
 
             try {
                 String horariosJson = objectMapper.writeValueAsString(dto.getHorarios());
@@ -101,6 +110,14 @@ public class ClinicalConfigService {
 
             sucursalRepository.save(sucursal);
         }
+
+        // 3. Actualizar Empresa (Configuración Global)
+        Empresa empresa = empresaRepository.findById(usuario.getTenantId())
+                .orElseThrow(() -> new BusinessException(ErrorCodes.USER_NOT_FOUND, "Empresa no encontrada", HttpStatus.NOT_FOUND));
+        
+        empresa.setTelefonoWhatsApp(dto.getTelefonoWhatsApp());
+        empresa.setHorasAnticipacionCancelacion(dto.getHorasAnticipacionCancelacion());
+        empresaRepository.save(empresa);
     }
 
     private Map<String, ClinicalConfigDTO.DayConfigDTO> parseHorarios(String json) {

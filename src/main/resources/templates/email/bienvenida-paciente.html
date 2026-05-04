@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenida - {{NOMBRE_CLINICA}}</title>
+</head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f4f6f9;color:#334155;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f6f9;">
+        <tr>
+            <td align="center" style="padding:24px 16px;">
+                <table role="presentation" width="580" cellspacing="0" cellpadding="0" border="0" style="max-width:580px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#0f766e,#0d9488);padding:28px 32px;text-align:center;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td align="center" style="padding-bottom:16px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;background-color:#ffffff;border-radius:12px;padding:12px;">
+                                            <tr><td align="center">
+                                                <img src="{{LOGO_URL}}" alt="Logo" width="120" style="display:block; max-width:100%; height:auto;" />
+                                            </td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr><td align="center" style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">{{NOMBRE_CLINICA}}</td></tr>
+                                <tr><td align="center" style="font-size:13px;color:#ccfbf1;padding-top:4px;">¡Bienvenido a nuestra familia!</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- CUERPO -->
+                    <tr>
+                        <td style="padding:32px 32px 16px 32px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr><td style="font-size:18px;font-weight:700;color:#1e293b;padding-bottom:8px;">¡Hola, {{NOMBRE_PACIENTE}}!</td></tr>
+                                <tr><td style="font-size:14px;color:#64748b;line-height:22px;padding-bottom:24px;">Es un gusto para nosotros darte la bienvenida. Hemos creado tu acceso al portal de pacientes donde podrás consultar tus citas, pagos y historial clínico.</td></tr>
+                            </table>
+
+                            <!-- Tarjeta de Credenciales -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                                <tr>
+                                    <td style="padding:24px;">
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding-bottom:12px;text-align:center;">Tus datos de acceso</td>
+                                            </tr>
+                                            <tr>
+                                                <td align="center">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="width:100%;">
+                                                        <tr>
+                                                            <td style="padding:8px;text-align:right;font-size:14px;color:#64748b;width:50%;">Número de acceso:</td>
+                                                            <td style="padding:8px;text-align:left;font-size:16px;font-weight:700;color:#0f766e;">{{PACIENTE_NUMERO}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding:8px;text-align:right;font-size:14px;color:#64748b;">PIN temporal:</td>
+                                                            <td style="padding:8px;text-align:left;font-size:16px;font-weight:700;color:#0f766e;">{{PIN_TEMPORAL}}</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="padding-top:24px;">
+                                <tr>
+                                    <td style="font-size:13px;color:#64748b;line-height:20px;background-color:#fffbeb;border-left:4px solid #f59e0b;padding:12px;">
+                                        <strong>Importante:</strong> Por seguridad, se te pedirá cambiar este PIN por uno de tu elección la primera vez que ingreses al portal.
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- BOTON ACCESO -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="padding:32px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{SITIO_WEB}}" style="background-color:#0d9488;color:#ffffff;padding:14px 28px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;display:inline-block;">Ir al Portal de Pacientes</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color:#f8fafc;padding:24px 32px;border-top:1px solid #e2e8f0;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td align="center" style="font-size:13px;color:#475569;line-height:20px;font-weight:600;padding-bottom:8px;">
+                                        {{NOMBRE_CLINICA}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="font-size:12px;color:#64748b;line-height:18px;">
+                                        📞 Teléfono de atención: <strong>{{TELEFONO_CLINICA}}</strong><br>
+                                        🌐 <a href="{{SITIO_WEB}}" style="color:#0ea5e9;text-decoration:none;">{{SITIO_WEB}}</a>
+                                    </td>
+                                </tr>
+                                <tr><td align="center" style="font-size:11px;color:#cbd5e1;padding-top:16px;">Este correo fue enviado automáticamente. Por favor no responda a este mensaje.</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

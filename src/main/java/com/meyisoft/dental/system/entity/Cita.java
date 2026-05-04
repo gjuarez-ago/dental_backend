@@ -61,6 +61,13 @@ public class Cita extends BaseEntity {
     @Column(name = "monto_total", precision = 12, scale = 2)
     private java.math.BigDecimal montoTotal;
 
+    @Column(name = "monto_pagado", precision = 12, scale = 2)
+    @Builder.Default
+    private java.math.BigDecimal montoPagado = java.math.BigDecimal.ZERO;
+
+    @Column(name = "precio_servicio", precision = 12, scale = 2)
+    private java.math.BigDecimal precioServicio;
+
     @Column(name = "motivo_rechazo", columnDefinition = "TEXT")
     private String motivoRechazo;
 

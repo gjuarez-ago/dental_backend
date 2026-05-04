@@ -2,6 +2,7 @@ package com.meyisoft.dental.system.controller;
 
 import com.meyisoft.dental.system.models.dto.CitaDTO;
 import com.meyisoft.dental.system.models.dto.CitaPatientDTO;
+import com.meyisoft.dental.system.models.dto.TimelineEntryDTO;
 import com.meyisoft.dental.system.models.request.PatientBookRequest;
 import com.meyisoft.dental.system.models.request.ProfileSetupRequest;
 import com.meyisoft.dental.system.models.response.ApiResponse;
@@ -37,6 +38,20 @@ public class PatientPortalController {
         List<CitaPatientDTO> result = service.getMyAppointments(principal.getTelefono(), principal.getEmail());
         
         return ResponseEntity.ok(ApiResponse.<List<CitaPatientDTO>>builder()
+                .ok(true)
+                .result(result)
+                .timestamp(OffsetDateTime.now())
+                .build());
+    }
+
+    @GetMapping("/medical-history")
+    @Operation(summary = "Obtener el historial clínico detallado (línea de tiempo) del paciente")
+    public ResponseEntity<ApiResponse<List<TimelineEntryDTO>>> getMedicalHistory(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        
+        List<TimelineEntryDTO> result = service.getMedicalHistory(principal.getUserId());
+        
+        return ResponseEntity.ok(ApiResponse.<List<TimelineEntryDTO>>builder()
                 .ok(true)
                 .result(result)
                 .timestamp(OffsetDateTime.now())

@@ -24,6 +24,9 @@ public enum AppointmentStatus {
     
     /** La cita fue anulada por la clínica o el paciente antes de realizarse. */
     CANCELADA("Cancelada", "Cita que no se llevará a cabo", "#F44336"),
+
+    /** La solicitud de cita no fue aceptada por la clínica (ej: horario no disponible). */
+    RECHAZADA("Rechazada", "Solicitud no aceptada por la clínica", "#B71C1C"),
     
     /** El paciente no se presentó a su cita a la hora acordada y no canceló. */
     AUSENTE("Paciente no Asistió", "No se presentó a la cita sin aviso previo", "#212121");

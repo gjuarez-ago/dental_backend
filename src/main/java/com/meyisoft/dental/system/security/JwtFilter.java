@@ -36,8 +36,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
         final String jwt = authHeader.substring(7);
         try {
-            if (jwtUtil.isTokenValid(jwt) && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Parseamos el token UNA SOLA VEZ. extractAllClaims ya verifica la firma y expiración.
                 Claims claims = jwtUtil.extractAllClaims(jwt);
+                
                 String userIdStr = claims.getSubject();
                 String tenantIdStr = claims.get("tenantId", String.class);
                 String sucursalIdStr = claims.get("sucursalId", String.class);
@@ -59,13 +61,22 @@ public class JwtFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         principal, null, Collections.singletonList(new SimpleGrantedAuthority(authorityRole)));
 
-                // You can set additional details here (e.g., custom UserDetails or a context
-                // object)
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"ok\": false, \"errorCode\": \"TOKEN_EXPIRED\", \"userMessage\": \"Su sesión ha expirado. Por favor, inicie sesión de nuevo.\"}");
+            return;
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"ok\": false, \"errorCode\": \"INVALID_TOKEN\", \"userMessage\": \"Token de seguridad inválido.\"}");
+            return;
         } catch (Exception e) {
-            // Invalid token
+            // Error inesperado al procesar el token
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

@@ -38,4 +38,14 @@ public class ServicioDental extends BaseEntity {
     @Column(name = "requiere_valoracion")
     private Boolean requiereValoracion; // true = valoración, false = cita directa
 
+    @Column(name = "giro")
+    @Builder.Default
+    private String giro = "DENTAL"; // Clasificación general (Dental, Psicología, etc.)
+
+    @Column(name = "especialidad_requerida")
+    private String especialidadRequerida; // El "match" para filtrar doctores (ej: Ortodoncia)
+
+    @Column(name = "procedimiento_quirurgico")
+    @Builder.Default
+    private Boolean procedimientoQuirurgico = false; // true = requiere consentimiento informado para cirugía
 }

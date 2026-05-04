@@ -44,4 +44,9 @@ public class PatientAuthController {
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody PatientRegisterRequest request) {
         return ResponseEntity.ok(patientAuthService.register(request));
     }
+
+    @PostMapping("/setup-access")
+    public ResponseEntity<AuthResponse> setupAccess(@Valid @RequestBody com.meyisoft.dental.system.models.request.PatientSetupAccessRequest request) {
+        return ResponseEntity.ok(patientAuthService.setupAccess(request));
+    }
 }

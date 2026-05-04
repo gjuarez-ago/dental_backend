@@ -30,6 +30,11 @@ public class PacienteDTO {
     private String emergenciaTelefono;
     private String tipoSangre;
     private String notasClinicas;
+    private String antecedentesHeredofamiliares;
+    private String antecedentesNoPatologicos;
+    private Boolean aceptacionPrivacidad;
+    private OffsetDateTime fechaAceptacionPrivacidad;
+
 
     // Auditoría
     private java.math.BigDecimal saldoPendiente;

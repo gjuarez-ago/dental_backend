@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import com.meyisoft.dental.system.enums.UserRole;
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class JwtUtil {
@@ -23,9 +24,16 @@ public class JwtUtil {
     @Value("${jwt.expiration:86400000}")
     private long jwtExpiration;
 
-    private SecretKey getSigningKey() {
+    private SecretKey key;
+
+    @PostConstruct
+    public void init() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private SecretKey getSigningKey() {
+        return this.key;
     }
 
     public String generateTokenForCRM(UUID userId, UUID tenantId, UserRole role, UUID sucursalId) {
