@@ -7,11 +7,13 @@ import com.meyisoft.dental.system.exception.ErrorCodes;
 import com.meyisoft.dental.system.models.request.PatientCheckRequest;
 import com.meyisoft.dental.system.models.request.PatientCompleteProfileRequest;
 import com.meyisoft.dental.system.models.request.PatientRegisterRequest;
+import com.meyisoft.dental.system.models.request.PatientSetupAccessRequest;
 import com.meyisoft.dental.system.models.response.AuthResponse;
 import com.meyisoft.dental.system.models.response.PatientCheckResponse;
 import com.meyisoft.dental.system.repository.CitaRepository;
 import com.meyisoft.dental.system.repository.EmpresaRepository;
 import com.meyisoft.dental.system.repository.PacienteRepository;
+import com.meyisoft.dental.system.repository.UsuarioRepository;
 import com.meyisoft.dental.system.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,7 @@ public class PatientAuthService {
 
     private final PacienteRepository pacienteRepository;
     private final EmpresaRepository empresaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final EmailService emailService;
     private final CitaRepository citaRepository;
     private final PasswordEncoder passwordEncoder;
@@ -36,6 +39,21 @@ public class PatientAuthService {
 
     @Transactional(readOnly = true)
     public PatientCheckResponse checkPatientPhone(PatientCheckRequest request) {
+        // 1. Prioridad: Verificar si es Personal del CRM (Staff) - Por Teléfono o Email
+        var usuarioOpt = usuarioRepository.findByTelefonoContactoAndActive(request.getTelefono());
+        
+        if (usuarioOpt.isEmpty()) {
+            usuarioOpt = usuarioRepository.findByEmailAndRegBorrado(request.getTelefono(), 1);
+        }
+
+        if (usuarioOpt.isPresent()) {
+            return PatientCheckResponse.builder()
+                    .status("STAFF_FOUND")
+                    .message("Usuario de personal encontrado.")
+                    .build();
+        }
+
+        // 2. Verificar si es Paciente
         var pacientes = pacienteRepository.findAllByTelefonoAndRegBorrado(request.getTelefono(), 1);
 
         if (pacientes.isEmpty()) {
@@ -131,7 +149,7 @@ public class PatientAuthService {
     }
 
     @Transactional
-    public AuthResponse setupAccess(com.meyisoft.dental.system.models.request.PatientSetupAccessRequest request) {
+    public AuthResponse setupAccess(PatientSetupAccessRequest request) {
         // 1. Buscar paciente por teléfono (el teléfono es el identificador de la sesión de reserva)
         List<Paciente> vinculados = pacienteRepository.findAllByTelefonoAndRegBorrado(request.getTelefono(), 1);
 

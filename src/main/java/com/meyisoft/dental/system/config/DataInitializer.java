@@ -63,6 +63,7 @@ public class DataInitializer implements CommandLineRunner {
                                 .nombreComercial("Dental Sonrisana")
                                 .planSuscripcion("SOLO")
                                 .logoUrl("https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_blue-removebg-preview.png")
+                                .isotypeUrl("https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/ChatGPT%20Image%206%20may%202026%2C%2014_23_47.png")
                                 .sitioWeb("https://sonrisana.site")
                                 .giro("DENTAL")
                                 .telefonoWhatsApp("7581082962")
@@ -122,41 +123,6 @@ public class DataInitializer implements CommandLineRunner {
                                 .cedulaProfesional("SARAI-12345")
                                 .build();
                 usuarioRepository.save(sarai);
-
-                /*
-                 * ESCENARIO CONSULTORIO (Comentado para uso futuro)
-                 * // Dr. Julián Galavis (ENDODONCISTA)
-                 * Usuario julian = Usuario.builder()
-                 * .id(UUID.fromString("550e8400-e29b-41d4-a716-446655440003"))
-                 * .tenantId(tenantId)
-                 * .sucursalIdPrincipal(sucursalId)
-                 * .rol(UserRole.DOCTOR)
-                 * .telefonoContacto("9992223344")
-                 * .nipHash(commonNipHash)
-                 * .nombreCompleto("Dr. Julián Galavis")
-                 * .requiereCambioNip(false)
-                 * .esPersonalClinico(true)
-                 * .especialidades(new String[] { "ENDODONCIA", "CIRUGIA" })
-                 * .cedulaProfesional("JULIAN-54321")
-                 * .build();
-                 * usuarioRepository.save(julian);
-                 * 
-                 * // Dra. Elena Ruiz (ORTODONCISTA)
-                 * Usuario elena = Usuario.builder()
-                 * .id(UUID.fromString("550e8400-e29b-41d4-a716-446655440004"))
-                 * .tenantId(tenantId)
-                 * .sucursalIdPrincipal(sucursalId)
-                 * .rol(UserRole.DOCTOR)
-                 * .telefonoContacto("9995556677")
-                 * .nipHash(commonNipHash)
-                 * .nombreCompleto("Dra. Elena Ruiz")
-                 * .requiereCambioNip(false)
-                 * .esPersonalClinico(true)
-                 * .especialidades(new String[] { "ORTODONCIA" })
-                 * .cedulaProfesional("ELENA-98765")
-                 * .build();
-                 * usuarioRepository.save(elena);
-                 */
 
                 // 4. Crear Servicios Reales (Basados en imagen de Sarai Rios)
                 List<ServicioDental> servicios = List.of(

@@ -16,6 +16,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Validator;
+import jakarta.validation.ConstraintViolation;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
@@ -36,6 +40,22 @@ public class PublicController {
         private final com.meyisoft.dental.system.repository.EmpresaRepository empresaRepository;
         private final StorageService storageService;
         private final ObjectMapper objectMapper;
+        private final Validator validator;
+
+        @GetMapping("/sucursales")
+        @Operation(summary = "Listar sucursales de una empresa (Tenant)")
+        public ResponseEntity<ApiResponse<List<com.meyisoft.dental.system.entity.Sucursal>>> getSucursales(
+                        @RequestParam UUID tenantId) {
+
+                List<com.meyisoft.dental.system.entity.Sucursal> result = sucursalRepository
+                                .findByTenantIdAndRegBorrado(tenantId, 1);
+
+                return ResponseEntity.ok(ApiResponse.<List<com.meyisoft.dental.system.entity.Sucursal>>builder()
+                                .ok(true)
+                                .result(result)
+                                .timestamp(OffsetDateTime.now())
+                                .build());
+        }
 
         @GetMapping("/agenda/clinic-info")
         @Operation(summary = "Obtener información de la clínica y datos bancarios (Público)")
@@ -77,6 +97,7 @@ public class PublicController {
                                 .clabeInterbancaria(sucursal.getClabeInterbancaria())
                                 .depositPercentage(0.30)
                                 .diasAnticipacionReserva(empresa.getDiasAnticipacionReserva())
+                                .isotypeUrl(empresa.getIsotypeUrl())
                                 .build();
 
                 return ResponseEntity.ok(ApiResponse.<com.meyisoft.dental.system.models.dto.ClinicInfoDTO>builder()
@@ -144,6 +165,16 @@ public class PublicController {
 
                 // 1. Deserializar DTO
                 CitaDTO dto = objectMapper.readValue(citaJson, CitaDTO.class);
+
+                // 1.1 Validar DTO manualmente
+                Set<ConstraintViolation<CitaDTO>> violations = validator.validate(dto);
+                if (!violations.isEmpty()) {
+                        String message = violations.stream()
+                                        .map(ConstraintViolation::getMessage)
+                                        .collect(Collectors.joining(", "));
+                        throw new com.meyisoft.dental.system.exception.BusinessException("VALIDATION_ERROR",
+                                        message, org.springframework.http.HttpStatus.BAD_REQUEST);
+                }
 
                 // 2. Validar archivo obligatorio
                 if (file == null || file.isEmpty()) {

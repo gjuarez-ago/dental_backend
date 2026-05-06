@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 @EqualsAndHashCode(callSuper = true)
 public class ServicioDental extends BaseEntity {
 
-    @Column(name = "nombre", nullable = false)
+    @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
@@ -29,7 +29,7 @@ public class ServicioDental extends BaseEntity {
     @Column(name = "duracion_minutos")
     private Integer duracionMinutos;
 
-    @Column(name = "color_etiqueta")
+    @Column(name = "color_etiqueta", length = 20)
     private String colorEtiqueta;
 
     @Column(name = "imagen_url", columnDefinition = "TEXT")
@@ -38,11 +38,11 @@ public class ServicioDental extends BaseEntity {
     @Column(name = "requiere_valoracion")
     private Boolean requiereValoracion; // true = valoración, false = cita directa
 
-    @Column(name = "giro")
+    @Column(name = "giro", length = 50)
     @Builder.Default
     private String giro = "DENTAL"; // Clasificación general (Dental, Psicología, etc.)
 
-    @Column(name = "especialidad_requerida")
+    @Column(name = "especialidad_requerida", length = 100)
     private String especialidadRequerida; // El "match" para filtrar doctores (ej: Ortodoncia)
 
     @Column(name = "procedimiento_quirurgico")

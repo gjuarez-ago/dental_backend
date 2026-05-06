@@ -9,6 +9,7 @@ import com.meyisoft.dental.system.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class UsuarioController {
     @PostMapping
     public ApiResponse<UsuarioResponse> crear(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestBody UsuarioRequest request) {
+            @Valid @RequestBody UsuarioRequest request) {
         UserRole callerRole = UserRole.valueOf(principal.getRole());
         return ApiResponse.success(usuarioService.crearUsuario(request, principal.getTenantId(), callerRole));
     }
@@ -39,7 +40,7 @@ public class UsuarioController {
     public ApiResponse<UsuarioResponse> actualizar(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id,
-            @RequestBody UsuarioRequest request) {
+            @Valid @RequestBody UsuarioRequest request) {
         return ApiResponse.success(usuarioService.actualizarUsuario(id, request, principal.getTenantId()));
     }
 

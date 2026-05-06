@@ -22,6 +22,9 @@ public class Empresa extends BaseEntity {
     @Column(name = "logo_url")
     private String logoUrl;
 
+    @Column(name = "isotype_url")
+    private String isotypeUrl;
+
     @Column(name = "sitio_web")
     private String sitioWeb;
 

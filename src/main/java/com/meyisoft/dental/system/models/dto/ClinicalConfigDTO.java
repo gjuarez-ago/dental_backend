@@ -29,6 +29,7 @@ public class ClinicalConfigDTO {
     private String telefonoWhatsApp;
     private Integer horasAnticipacionCancelacion;
     private Integer diasAnticipacionReserva;
+    private String isotypeUrl;
 
     @Data
     @Builder

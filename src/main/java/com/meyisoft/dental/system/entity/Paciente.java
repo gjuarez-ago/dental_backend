@@ -18,28 +18,28 @@ import java.math.BigDecimal;
 @EqualsAndHashCode(callSuper = true)
 public class Paciente extends BaseEntity {
 
-    @Column(name = "nombre_completo", nullable = false)
+    @Column(name = "nombre_completo", nullable = false, length = 150)
     private String nombreCompleto;
 
     @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
-    @Column(name = "telefono")
+    @Column(name = "telefono", length = 15)
     private String telefono;
 
-    @Column(name = "email")
+    @Column(name = "email", length = 100)
     private String email;
 
-    @Column(name = "genero")
+    @Column(name = "genero", length = 20)
     private String genero; // MASCULINO, FEMENINO, OTRO
 
-    @Column(name = "curp")
+    @Column(name = "curp", length = 18)
     private String curp;
 
-    @Column(name = "direccion")
+    @Column(name = "direccion", length = 255)
     private String direccion;
 
-    @Column(name = "ocupacion")
+    @Column(name = "ocupacion", length = 100)
     private String ocupacion;
 
     @Column(name = "alergias", columnDefinition = "TEXT")
@@ -51,13 +51,13 @@ public class Paciente extends BaseEntity {
     @Column(name = "medicamentos_actuales", columnDefinition = "TEXT")
     private String medicamentosActuales;
 
-    @Column(name = "emergencia_nombre")
+    @Column(name = "emergencia_nombre", length = 150)
     private String emergenciaNombre;
 
-    @Column(name = "emergencia_telefono")
+    @Column(name = "emergencia_telefono", length = 15)
     private String emergenciaTelefono;
 
-    @Column(name = "tipo_sangre")
+    @Column(name = "tipo_sangre", length = 10)
     private String tipoSangre;
 
     @Column(name = "notas_clinicas", columnDefinition = "TEXT")
@@ -98,12 +98,12 @@ public class Paciente extends BaseEntity {
     @Column(name = "rfc", length = 13)
     private String rfc;
 
-    @Column(name = "razon_social_fiscal")
+    @Column(name = "razon_social_fiscal", length = 255)
     private String razonSocialFiscal;
 
     @Column(name = "codigo_postal_fiscal", length = 5)
     private String codigoPostalFiscal;
 
-    @Column(name = "regimen_fiscal")
+    @Column(name = "regimen_fiscal", length = 100)
     private String regimenFiscal;
 }

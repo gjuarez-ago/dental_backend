@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -58,7 +59,7 @@ public class ServicioDentalController {
     @PostMapping
     @Operation(summary = "Crear un nuevo servicio")
     public ResponseEntity<ApiResponse<ServicioDentalDTO>> crear(
-            @RequestBody ServicioDentalDTO dto,
+            @Valid @RequestBody ServicioDentalDTO dto,
             @AuthenticationPrincipal UserPrincipal principal) {
         
         ServicioDentalDTO creado = service.crear(dto, principal.getTenantId());
@@ -74,7 +75,7 @@ public class ServicioDentalController {
     @Operation(summary = "Actualizar un servicio existente")
     public ResponseEntity<ApiResponse<ServicioDentalDTO>> actualizar(
             @PathVariable UUID id,
-            @RequestBody ServicioDentalDTO dto,
+            @Valid @RequestBody ServicioDentalDTO dto,
             @AuthenticationPrincipal UserPrincipal principal) {
         
         ServicioDentalDTO actualizado = service.actualizar(id, dto, principal.getTenantId());

@@ -29,10 +29,10 @@ public class Usuario extends BaseEntity {
     @Column(nullable = false)
     private UserRole rol; // OWNER, AGENT (Según AGENTS.md)
 
-    @Column(name = "telefono_contacto", nullable = false)
+    @Column(name = "telefono_contacto", nullable = false, length = 15)
     private String telefonoContacto;
 
-    @Column(name = "email")
+    @Column(name = "email", length = 100)
     private String email;
 
     @JsonIgnore
@@ -44,13 +44,13 @@ public class Usuario extends BaseEntity {
     @Builder.Default
     private Boolean requiereCambioNip = true;
 
-    @Column(name = "nombre_completo", nullable = false)
+    @Column(name = "nombre_completo", nullable = false, length = 150)
     private String nombreCompleto;
 
-    @Column(name = "cedula_profesional")
+    @Column(name = "cedula_profesional", length = 50)
     private String cedulaProfesional;
 
-    @Column(name = "fotografia_url")
+    @Column(name = "fotografia_url", length = 500)
     private String fotografiaUrl;
 
     @Column(name = "es_personal_clinico")
@@ -61,7 +61,7 @@ public class Usuario extends BaseEntity {
     @Builder.Default
     private Boolean activo = true;
 
-    @Column(name = "genero")
+    @Column(name = "genero", length = 20)
     private String genero; // MASCULINO, FEMENINO, OTRO
 
     @Column(name = "especialidades", columnDefinition = "text[]")
