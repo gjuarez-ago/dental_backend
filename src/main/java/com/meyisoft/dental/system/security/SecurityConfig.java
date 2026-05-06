@@ -26,6 +26,9 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> {}) // Pick up CorsConfig
+            .headers(headers -> headers
+                .permissionsPolicy(permissions -> permissions
+                    .policy("publickey-credentials-get 'none'; publickey-credentials-create 'none'")))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/public/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "OWNER")
