@@ -105,7 +105,8 @@ public class CitaService {
     @Transactional(readOnly = true)
     public List<CitaDTO> listarPorRango(UUID tenantId, UUID sucursalId, OffsetDateTime start, OffsetDateTime end,
             UUID doctorId) {
-        List<CitaSummaryProjection> results = repository.findByRangeOptimized(tenantId, sucursalId, start, end, 1, doctorId);
+        List<CitaSummaryProjection> results = repository.findByRangeOptimized(tenantId, sucursalId, start, end, 1,
+                doctorId);
         if (results.isEmpty())
             return new ArrayList<>();
 
@@ -128,7 +129,7 @@ public class CitaService {
 
     private CitaDTO mapFromProjection(CitaSummaryProjection p, Map<UUID, List<Pago>> pagosMap) {
         UUID id = p.getId();
-        
+
         CitaDTO dto = CitaDTO.builder()
                 .id(id)
                 .pacienteId(p.getPacienteId())
@@ -161,12 +162,14 @@ public class CitaService {
 
         if (pagos != null) {
             totalPagadoReal = pagos.stream()
-                .filter(pago -> pago.getStatus() == PagoStatus.APROBADO || pago.getStatus() == PagoStatus.PENDIENTE_REVISION)
-                .map(Pago::getMonto)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
+                    .filter(pago -> pago.getStatus() == PagoStatus.APROBADO
+                            || pago.getStatus() == PagoStatus.PENDIENTE_REVISION)
+                    .map(Pago::getMonto)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
             tienePendienteRevision = pagos.stream().anyMatch(pago -> pago.getStatus() == PagoStatus.PENDIENTE_REVISION);
-            comprobanteUrl = pagos.stream().filter(pago -> pago.getComprobanteUrl() != null).map(Pago::getComprobanteUrl).findFirst().orElse(null);
+            comprobanteUrl = pagos.stream().filter(pago -> pago.getComprobanteUrl() != null)
+                    .map(Pago::getComprobanteUrl).findFirst().orElse(null);
         }
 
         dto.setMontoPagado(totalPagadoReal);
@@ -174,7 +177,7 @@ public class CitaService {
 
         // Calcular estado del ticket con lógica completa
         calculateTicketStatus(dto, tienePendienteRevision);
-        
+
         return dto;
     }
 
@@ -204,7 +207,8 @@ public class CitaService {
     }
 
     private int getStatusPriority(AppointmentStatus status) {
-        if (status == null) return 99;
+        if (status == null)
+            return 99;
         return switch (status) {
             case EN_CONSULTA -> 1;
             case LLEGADA -> 2;
@@ -279,6 +283,23 @@ public class CitaService {
         // 2. Validar horario de sucursal
         validarHorarioSucursal(dto.getSucursalId(), dto.getFechaHora(), dto.getDuracionMinutos());
 
+        // 2.1 Validar anticipación mínima (para fuentes externas)
+        String source = (dto.getSource() != null) ? dto.getSource().toUpperCase() : "CRM";
+        if (source.equals("APP") || source.equals("PUBLIC")) {
+            Empresa empresa = empresaRepository.findById(tenantId).orElseThrow();
+            int minDays = empresa.getDiasAnticipacionReserva() != null ? empresa.getDiasAnticipacionReserva() : 1;
+
+            LocalDate hoy = LocalDate.now(com.meyisoft.dental.system.utils.DateUtils.MEXICO_OFFSET);
+            LocalDate fechaCita = dto.getFechaHora().toLocalDate();
+
+            if (fechaCita.isBefore(hoy.plusDays(minDays))) {
+                throw new BusinessException("ANTICIPACION_INSUFICIENTE",
+                        "Lo sentimos, por política de la clínica las citas deben agendarse con al menos " + minDays
+                                + " día(s) de anticipación para garantizar tu atención.",
+                        HttpStatus.BAD_REQUEST);
+            }
+        }
+
         // 3. Validar disponibilidad
         OffsetDateTime finCita = dto.getFechaHora().plusMinutes(dto.getDuracionMinutos());
 
@@ -308,7 +329,7 @@ public class CitaService {
         }
 
         // 4. Manejo de Paciente
-        String source = (dto.getSource() != null) ? dto.getSource().toUpperCase() : "CRM";
+        source = (dto.getSource() != null) ? dto.getSource().toUpperCase() : "CRM";
         UUID pacienteId = dto.getPacienteId();
 
         if (pacienteId == null && (source.equals("APP") || source.equals("PUBLIC"))) {
@@ -359,7 +380,6 @@ public class CitaService {
                     HttpStatus.BAD_REQUEST);
         }
 
-
         AppointmentStatus estadoInicial = (source.equals("APP") || source.equals("PUBLIC"))
                 ? AppointmentStatus.POR_CONFIRMAR
                 : AppointmentStatus.CONFIRMADA;
@@ -370,10 +390,11 @@ public class CitaService {
                 : (servicio != null ? servicio.getPrecioBase() : BigDecimal.ZERO);
 
         // Validación de Transparencia: No permitir costo 0 si el servicio tiene valor
-        if (servicio != null && servicio.getPrecioBase().compareTo(BigDecimal.ZERO) > 0 && costoFinal.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("INVALID_COST", 
-                "El costo de la cita no puede ser $0.00. Para servicios de cortesía o garantía, mantén el precio real y regístralo como Cortesía en el momento del cobro para que aparezca en tus reportes de inversión.", 
-                HttpStatus.BAD_REQUEST);
+        if (servicio != null && servicio.getPrecioBase().compareTo(BigDecimal.ZERO) > 0
+                && costoFinal.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("INVALID_COST",
+                    "El costo de la cita no puede ser $0.00. Para servicios de cortesía o garantía, mantén el precio real y regístralo como Cortesía en el momento del cobro para que aparezca en tus reportes de inversión.",
+                    HttpStatus.BAD_REQUEST);
         }
 
         Cita entity = Cita.builder()
@@ -420,9 +441,11 @@ public class CitaService {
         if (estadoInicial == AppointmentStatus.POR_CONFIRMAR) {
             notificarNuevaCitaPendienteOwner(saved, dto);
         } else if (estadoInicial == AppointmentStatus.CONFIRMADA) {
-            // Si la cita nace confirmada (agendada desde CRM), cargamos la deuda al paciente
+            // Si la cita nace confirmada (agendada desde CRM), cargamos la deuda al
+            // paciente
             Paciente paciente = pacienteRepository.findById(pacienteId).orElseThrow();
-            if (paciente.getSaldoPendiente() == null) paciente.setSaldoPendiente(BigDecimal.ZERO);
+            if (paciente.getSaldoPendiente() == null)
+                paciente.setSaldoPendiente(BigDecimal.ZERO);
             paciente.setSaldoPendiente(paciente.getSaldoPendiente().add(costoFinal));
             pacienteRepository.save(paciente);
         }
@@ -457,12 +480,13 @@ public class CitaService {
         entity.setDuracionMinutos(duracion);
 
         if (montoTotal != null) {
-            // Validación de Transparencia: No permitir costo 0 en edición si el servicio tiene valor
+            // Validación de Transparencia: No permitir costo 0 en edición si el servicio
+            // tiene valor
             BigDecimal precioBase = entity.getPrecioServicio() != null ? entity.getPrecioServicio() : BigDecimal.ZERO;
             if (precioBase.compareTo(BigDecimal.ZERO) > 0 && montoTotal.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new BusinessException("INVALID_COST", 
-                    "No se permite cambiar el costo a $0.00. Mantén el precio real; si es una garantía o cortesía, regístralo como tal al momento del cobro.", 
-                    HttpStatus.BAD_REQUEST);
+                throw new BusinessException("INVALID_COST",
+                        "No se permite cambiar el costo a $0.00. Mantén el precio real; si es una garantía o cortesía, regístralo como tal al momento del cobro.",
+                        HttpStatus.BAD_REQUEST);
             }
             entity.setMontoTotal(montoTotal);
         }
@@ -657,7 +681,8 @@ public class CitaService {
                 .filter(c -> c.getTenantId().equals(tenantId) && c.getRegBorrado() == 1)
                 .orElseThrow(() -> new BusinessException("NOT_FOUND", "Cita no encontrada", HttpStatus.NOT_FOUND));
 
-        // 1. Si la cita estaba CONFIRMADA, retiramos el cargo de la deuda global del paciente
+        // 1. Si la cita estaba CONFIRMADA, retiramos el cargo de la deuda global del
+        // paciente
         if (entity.getEstado() == AppointmentStatus.CONFIRMADA) {
             Paciente paciente = pacienteRepository.findById(entity.getPacienteId()).orElseThrow();
             if (paciente.getSaldoPendiente() != null) {
@@ -676,8 +701,10 @@ public class CitaService {
                 pago.setStatus(PagoStatus.RECHAZADO);
             } else if (pago.getStatus() == PagoStatus.APROBADO) {
                 pago.setStatus(PagoStatus.CANCELADO);
-                // Si reembolsamos un pago que ya había sido aprobado, debemos "devolver" ese monto 
-                // al saldo pendiente del paciente (o dejarlo como está si no se reembolsa realmente)
+                // Si reembolsamos un pago que ya había sido aprobado, debemos "devolver" ese
+                // monto
+                // al saldo pendiente del paciente (o dejarlo como está si no se reembolsa
+                // realmente)
                 if (reembolsar) {
                     Paciente p = pacienteRepository.findById(entity.getPacienteId()).orElseThrow();
                     if (p.getSaldoPendiente() != null) {
@@ -733,17 +760,20 @@ public class CitaService {
         OffsetDateTime yesterdayEnd = todayEnd.minusDays(1);
 
         // 1. Obtener todas las estadísticas de Pagos en un solo viaje
-        DashboardPagoStats pagoStats = pagoRepository.findDashboardStats(tenantId, todayStart, todayEnd, yesterdayStart, yesterdayEnd, doctorId);
+        DashboardPagoStats pagoStats = pagoRepository.findDashboardStats(tenantId, todayStart, todayEnd, yesterdayStart,
+                yesterdayEnd, doctorId);
         BigDecimal ingresosHoy = pagoStats.getIngresosHoy() != null ? pagoStats.getIngresosHoy() : BigDecimal.ZERO;
         BigDecimal ingresosAyer = pagoStats.getIngresosAyer() != null ? pagoStats.getIngresosAyer() : BigDecimal.ZERO;
 
         // 2. Obtener todas las estadísticas de Citas en un solo viaje
-        DashboardCitaStats citaStats = repository.findDashboardCitaStats(tenantId, sucursalId, todayStart, todayEnd, yesterdayStart, yesterdayEnd, doctorId);
+        DashboardCitaStats citaStats = repository.findDashboardCitaStats(tenantId, sucursalId, todayStart, todayEnd,
+                yesterdayStart, yesterdayEnd, doctorId);
         long citasHoy = citaStats.getCitasHoy() != null ? citaStats.getCitasHoy() : 0L;
         long citasAyer = citaStats.getCitasAyer() != null ? citaStats.getCitasAyer() : 0L;
 
         // 3. Obtener estadísticas de Pacientes
-        DashboardPacienteStats pacienteStats = pacienteRepository.findDashboardPacienteStats(tenantId, todayStart, todayEnd, yesterdayStart, yesterdayEnd);
+        DashboardPacienteStats pacienteStats = pacienteRepository.findDashboardPacienteStats(tenantId, todayStart,
+                todayEnd, yesterdayStart, yesterdayEnd);
         long pacientesHoy = pacienteStats.getPacientesHoy() != null ? pacienteStats.getPacientesHoy() : 0L;
         long pacientesAyer = pacienteStats.getPacientesAyer() != null ? pacienteStats.getPacientesAyer() : 0L;
 
@@ -755,8 +785,10 @@ public class CitaService {
                 .collect(Collectors.toList());
 
         return DashboardStatsDTO.builder()
-                .ingresosPorValidar(pagoStats.getIngresosPendientes() != null ? pagoStats.getIngresosPendientes() : BigDecimal.ZERO)
-                .comprobantesPendientesCount(pagoStats.getCountPendientes() != null ? pagoStats.getCountPendientes() : 0L)
+                .ingresosPorValidar(
+                        pagoStats.getIngresosPendientes() != null ? pagoStats.getIngresosPendientes() : BigDecimal.ZERO)
+                .comprobantesPendientesCount(
+                        pagoStats.getCountPendientes() != null ? pagoStats.getCountPendientes() : 0L)
                 .ingresosHoy(ingresosHoy)
                 .ingresosHoyTrend(calculateTrend(ingresosHoy, ingresosAyer))
                 .citasHoyCount(citasHoy)
@@ -899,9 +931,9 @@ public class CitaService {
 
             // 1. Validar límite físico (Sillones ocupados en este momento)
             long citasSimultaneas = citasDia.stream()
-                    .filter(c -> c.getEstado() != AppointmentStatus.CANCELADA 
-                              && c.getEstado() != AppointmentStatus.RECHAZADA
-                              && c.getEstado() != AppointmentStatus.AUSENTE)
+                    .filter(c -> c.getEstado() != AppointmentStatus.CANCELADA
+                            && c.getEstado() != AppointmentStatus.RECHAZADA
+                            && c.getEstado() != AppointmentStatus.AUSENTE)
                     .filter(c -> c.getFechaHora().isBefore(e)
                             && c.getFechaHora().plusMinutes(c.getDuracionMinutos()).isAfter(s))
                     .count();
@@ -914,9 +946,9 @@ public class CitaService {
                 for (Usuario doctor : doctores) {
                     boolean doctorOcupado = citasDia.stream()
                             .filter(c -> c.getDoctorId() != null && c.getDoctorId().equals(doctor.getId()))
-                            .filter(c -> c.getEstado() != AppointmentStatus.CANCELADA 
-                                      && c.getEstado() != AppointmentStatus.RECHAZADA
-                                      && c.getEstado() != AppointmentStatus.AUSENTE)
+                            .filter(c -> c.getEstado() != AppointmentStatus.CANCELADA
+                                    && c.getEstado() != AppointmentStatus.RECHAZADA
+                                    && c.getEstado() != AppointmentStatus.AUSENTE)
                             .anyMatch(c -> c.getFechaHora().isBefore(e)
                                     && c.getFechaHora().plusMinutes(c.getDuracionMinutos()).isAfter(s));
 
@@ -974,13 +1006,14 @@ public class CitaService {
                     } catch (org.springframework.dao.DataIntegrityViolationException e) {
                         // Si otro hilo insertó el registro justo después de nuestro find inicial
                         return folioRepository.findByTenantIdAndTipoAndFechaAndRegBorrado(tenantId, tipo, hoy, 1)
-                                .orElseThrow(() -> new RuntimeException("Error crítico de concurrencia al generar folio", e));
+                                .orElseThrow(() -> new RuntimeException(
+                                        "Error crítico de concurrencia al generar folio", e));
                     }
                 });
-        
+
         reg.setUltimoNumero(reg.getUltimoNumero() + 1);
         folioRepository.save(reg);
-        
+
         return String.format("CIT-%s-%04d", hoy.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")),
                 reg.getUltimoNumero());
     }
@@ -1064,9 +1097,9 @@ public class CitaService {
         // Adjuntar comprobante si existe y calcular monto pagado real
         List<Pago> pagos = (pagosPorCita != null) ? pagosPorCita.get(entity.getId())
                 : pagoRepository.findByCitaIdAndRegBorrado(entity.getId(), 1);
-        
+
         BigDecimal totalPagadoReal = BigDecimal.ZERO;
-        
+
         if (pagos != null) {
             // Calcular el total pagado (Aprobados + Pendientes de Revisión)
             totalPagadoReal = pagos.stream()

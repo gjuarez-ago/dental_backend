@@ -28,6 +28,7 @@ public class ClinicalConfigDTO {
     // De la tabla Empresa (Global)
     private String telefonoWhatsApp;
     private Integer horasAnticipacionCancelacion;
+    private Integer diasAnticipacionReserva;
 
     @Data
     @Builder

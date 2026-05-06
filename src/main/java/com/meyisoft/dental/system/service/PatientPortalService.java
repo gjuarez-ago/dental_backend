@@ -298,6 +298,16 @@ public class PatientPortalService {
         info.put("cuentaBancaria", sucursal.getCuentaBancaria());
         info.put("clabeInterbancaria", sucursal.getClabeInterbancaria());
         info.put("telefono", sucursal.getTelefono());
+
+        // Obtener días de anticipación de la empresa
+        Empresa empresa = empresaRepository.findById(tenantId).orElse(null);
+        if (empresa != null) {
+            Integer leadDays = empresa.getDiasAnticipacionReserva() != null ? empresa.getDiasAnticipacionReserva() : 1;
+            info.put("leadDays", leadDays.toString());
+        } else {
+            info.put("leadDays", "1");
+        }
+
         return info;
     }
 }

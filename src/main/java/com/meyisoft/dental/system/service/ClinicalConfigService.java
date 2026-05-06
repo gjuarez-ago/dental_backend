@@ -70,6 +70,7 @@ public class ClinicalConfigService {
                 .direccionSucursal(sucursal.getDireccion())
                 .telefonoWhatsApp(empresa.getTelefonoWhatsApp())
                 .horasAnticipacionCancelacion(empresa.getHorasAnticipacionCancelacion())
+                .diasAnticipacionReserva(empresa.getDiasAnticipacionReserva())
                 .build();
     }
 
@@ -117,6 +118,7 @@ public class ClinicalConfigService {
         
         empresa.setTelefonoWhatsApp(dto.getTelefonoWhatsApp());
         empresa.setHorasAnticipacionCancelacion(dto.getHorasAnticipacionCancelacion());
+        empresa.setDiasAnticipacionReserva(dto.getDiasAnticipacionReserva() != null ? dto.getDiasAnticipacionReserva() : 1);
         empresaRepository.save(empresa);
     }
 

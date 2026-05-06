@@ -66,6 +66,7 @@ public class DataInitializer implements CommandLineRunner {
                                 .sitioWeb("https://sonrisana.site")
                                 .giro("DENTAL")
                                 .telefonoWhatsApp("7581082962")
+                                .diasAnticipacionReserva(1)
                                 .build();
                 empresaRepository.save(empresa);
 

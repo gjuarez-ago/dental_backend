@@ -72,4 +72,8 @@ public class Empresa extends BaseEntity {
     @Column(name = "horas_anticipacion_cancelacion")
     @Builder.Default
     private Integer horasAnticipacionCancelacion = 24;
+
+    @Column(name = "dias_anticipacion_reserva")
+    @Builder.Default
+    private Integer diasAnticipacionReserva = 1;
 }

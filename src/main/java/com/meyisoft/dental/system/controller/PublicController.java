@@ -33,6 +33,7 @@ public class PublicController {
         private final CitaService citaService;
         private final com.meyisoft.dental.system.repository.SucursalRepository sucursalRepository;
         private final com.meyisoft.dental.system.repository.UsuarioRepository usuarioRepository;
+        private final com.meyisoft.dental.system.repository.EmpresaRepository empresaRepository;
         private final StorageService storageService;
         private final ObjectMapper objectMapper;
 
@@ -60,6 +61,13 @@ public class PublicController {
                                                 "No se encontró el propietario del tenant",
                                                 org.springframework.http.HttpStatus.NOT_FOUND));
 
+                // Buscamos la configuración global de la empresa
+                com.meyisoft.dental.system.entity.Empresa empresa = empresaRepository.findById(tenantId)
+                                .orElseThrow(() -> new com.meyisoft.dental.system.exception.BusinessException(
+                                                "NOT_FOUND",
+                                                "Empresa no encontrada",
+                                                org.springframework.http.HttpStatus.NOT_FOUND));
+
                 com.meyisoft.dental.system.models.dto.ClinicInfoDTO info = com.meyisoft.dental.system.models.dto.ClinicInfoDTO
                                 .builder()
                                 .clinicName("Clínica Dental")
@@ -68,6 +76,7 @@ public class PublicController {
                                 .cuentaBancaria(sucursal.getCuentaBancaria())
                                 .clabeInterbancaria(sucursal.getClabeInterbancaria())
                                 .depositPercentage(0.30)
+                                .diasAnticipacionReserva(empresa.getDiasAnticipacionReserva())
                                 .build();
 
                 return ResponseEntity.ok(ApiResponse.<com.meyisoft.dental.system.models.dto.ClinicInfoDTO>builder()

@@ -16,4 +16,5 @@ public class ClinicInfoDTO {
     private String cuentaBancaria;
     private String clabeInterbancaria;
     private double depositPercentage;
+    private Integer diasAnticipacionReserva;
 }
