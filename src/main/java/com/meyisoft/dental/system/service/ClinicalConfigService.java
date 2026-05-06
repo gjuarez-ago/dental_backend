@@ -129,6 +129,7 @@ public class ClinicalConfigService {
         empresa.setDiasAnticipacionReserva(
                 dto.getDiasAnticipacionReserva() != null ? dto.getDiasAnticipacionReserva() : 1);
         empresaRepository.save(empresa);
+        log.info("Configuración clínica actualizada exitosamente para el usuario: {}", userId);
     }
 
     private Map<String, ClinicalConfigDTO.DayConfigDTO> parseHorarios(String json) {
