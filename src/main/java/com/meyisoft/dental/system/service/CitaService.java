@@ -806,6 +806,119 @@ public class CitaService {
         return ((current.doubleValue() - previous.doubleValue()) / previous.doubleValue()) * 100.0;
     }
 
+    /**
+     * Obtiene el resumen de citas para el panel lateral de la agenda.
+     * Soporta tres vistas: HOY, SEMANA y MES.
+     * Calcula métricas de estado y determina la próxima cita activa.
+     *
+     * @param tenantId   identificador del tenant
+     * @param sucursalId filtro por sucursal
+     * @param doctorId   filtro opcional por doctor
+     * @param tipo       HOY | SEMANA | MES (determina el rango temporal)
+     * @return AgendaResumenDTO con las citas y métricas del periodo
+     */
+    @Transactional(readOnly = true)
+    public com.meyisoft.dental.system.models.dto.AgendaResumenDTO getAgendaResumen(
+            UUID tenantId, UUID sucursalId, UUID doctorId, String tipo) {
+
+        // 1. Determinar el rango de fechas según el tipo solicitado
+        OffsetDateTime now = OffsetDateTime.now(com.meyisoft.dental.system.utils.DateUtils.MEXICO_OFFSET);
+        OffsetDateTime start;
+        OffsetDateTime end;
+
+        switch (tipo.toUpperCase()) {
+            case "SEMANA" -> {
+                // Lunes de la semana actual hasta el domingo
+                start = now.toLocalDate()
+                        .with(java.time.DayOfWeek.MONDAY)
+                        .atStartOfDay()
+                        .atOffset(com.meyisoft.dental.system.utils.DateUtils.MEXICO_OFFSET);
+                end = start.plusDays(7);
+            }
+            case "MES" -> {
+                // Primer y último día del mes actual
+                start = now.toLocalDate()
+                        .withDayOfMonth(1)
+                        .atStartOfDay()
+                        .atOffset(com.meyisoft.dental.system.utils.DateUtils.MEXICO_OFFSET);
+                end = start.plusMonths(1);
+            }
+            default -> {
+                // HOY: desde las 00:00 hasta las 23:59:59
+                start = now.toLocalDate()
+                        .atStartOfDay()
+                        .atOffset(com.meyisoft.dental.system.utils.DateUtils.MEXICO_OFFSET);
+                end = now.toLocalDate()
+                        .atTime(23, 59, 59)
+                        .atOffset(com.meyisoft.dental.system.utils.DateUtils.MEXICO_OFFSET);
+            }
+        }
+
+        // 2. Consultar usando la proyección optimizada existente (sin N+1)
+        List<CitaSummaryProjection> proyecciones = repository.findByRangeOptimized(
+                tenantId, sucursalId, start, end, 1, doctorId);
+
+        if (proyecciones.isEmpty()) {
+            return com.meyisoft.dental.system.models.dto.AgendaResumenDTO.builder()
+                    .totalCitas(0)
+                    .citasPendientes(0)
+                    .citasAtendidas(0)
+                    .citasCanceladas(0)
+                    .citas(new ArrayList<>())
+                    .build();
+        }
+
+        // 3. Cargar pagos en un solo viaje para evitar N+1
+        Set<UUID> citaIds = proyecciones.stream()
+                .map(CitaSummaryProjection::getId)
+                .collect(Collectors.toSet());
+        Map<UUID, List<Pago>> pagosMap = pagoRepository
+                .findAllByCitaIdInAndRegBorrado(citaIds, 1)
+                .stream()
+                .collect(Collectors.groupingBy(Pago::getCitaId));
+
+        // 4. Mapear proyecciones a DTOs
+        List<CitaDTO> citas = proyecciones.stream()
+                .map(r -> mapFromProjection(r, pagosMap))
+                .sorted((c1, c2) -> c1.getFechaHora().compareTo(c2.getFechaHora()))
+                .collect(Collectors.toList());
+
+        // 5. Calcular métricas de estado
+        Set<AppointmentStatus> estadosPendientes = Set.of(
+                AppointmentStatus.POR_CONFIRMAR, AppointmentStatus.CONFIRMADA);
+        Set<AppointmentStatus> estadosAtendidos = Set.of(
+                AppointmentStatus.LLEGADA, AppointmentStatus.EN_CONSULTA,
+                AppointmentStatus.POR_LIQUIDAR, AppointmentStatus.FINALIZADA);
+        Set<AppointmentStatus> estadosCancelados = Set.of(
+                AppointmentStatus.CANCELADA, AppointmentStatus.AUSENTE, AppointmentStatus.RECHAZADA);
+
+        long pendientes = citas.stream()
+                .filter(c -> estadosPendientes.contains(c.getEstado())).count();
+        long atendidas = citas.stream()
+                .filter(c -> estadosAtendidos.contains(c.getEstado())).count();
+        long canceladas = citas.stream()
+                .filter(c -> estadosCancelados.contains(c.getEstado())).count();
+
+        // 6. Determinar la próxima cita activa (la más cercana en el futuro)
+        CitaDTO proximaCita = citas.stream()
+                .filter(c -> estadosPendientes.contains(c.getEstado()))
+                .filter(c -> c.getFechaHora().isAfter(now))
+                .findFirst()
+                .orElse(null);
+
+        log.info("Resumen de agenda ({}) generado para tenant {} | Total: {}, Pendientes: {}",
+                tipo, tenantId, citas.size(), pendientes);
+
+        return com.meyisoft.dental.system.models.dto.AgendaResumenDTO.builder()
+                .totalCitas(citas.size())
+                .citasPendientes(pendientes)
+                .citasAtendidas(atendidas)
+                .citasCanceladas(canceladas)
+                .proximaCita(proximaCita)
+                .citas(citas)
+                .build();
+    }
+
     // --- MÉTODOS DE DISPONIBILIDAD (MANTENIDOS) ---
 
     @Transactional(readOnly = true)
@@ -1074,6 +1187,47 @@ public class CitaService {
                 dto.setServicioNombre(s.getNombre());
                 dto.setProcedimientoQuirurgico(s.getProcedimientoQuirurgico());
             }
+        }
+
+        // ── Enriquecer con datos de branding para receta médica ──
+        try {
+            Empresa empresa = empresaRepository.findById(entity.getTenantId()).orElse(null);
+            if (empresa != null) {
+                dto.setEmpresaNombre(empresa.getNombreComercial());
+                dto.setEmpresaLogoUrl(empresa.getLogoUrl());
+                dto.setEmpresaIsotipoUrl(empresa.getIsotypeUrl());
+                dto.setEmpresaSitioWeb(empresa.getSitioWeb());
+            }
+
+            Sucursal sucursal = sucursalRepository.findById(entity.getSucursalId()).orElse(null);
+            if (sucursal != null) {
+                dto.setSucursalDireccion(sucursal.getDireccion());
+                dto.setSucursalTelefono(sucursal.getTelefono());
+            }
+
+            if (entity.getDoctorId() != null) {
+                Usuario doc = usuarioRepository.findById(entity.getDoctorId()).orElse(null);
+                if (doc != null) {
+                    dto.setDoctorCedula(doc.getCedula());
+                    dto.setDoctorEspecialidad(
+                        doc.getEspecialidades() != null && doc.getEspecialidades().length > 0
+                            ? doc.getEspecialidades()[0] : null);
+                }
+            }
+
+            if (entity.getPacienteId() != null) {
+                Paciente pac = pacienteRepository.findById(entity.getPacienteId()).orElse(null);
+                if (pac != null) {
+                    dto.setPacienteSexo(pac.getSexo());
+                    if (pac.getFechaNacimiento() != null) {
+                        dto.setPacienteEdad(
+                            java.time.Period.between(pac.getFechaNacimiento(),
+                                java.time.LocalDate.now()).getYears());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo enriquecer el DTO de cita con datos de branding: {}", e.getMessage());
         }
 
         // Determinar el Estado del Ticket para el frontend

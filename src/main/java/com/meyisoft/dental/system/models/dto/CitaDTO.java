@@ -52,4 +52,26 @@ public class CitaDTO {
     private String referenciaPago;
     private Boolean procedimientoQuirurgico;
     private OffsetDateTime createdAt;
+
+    // ── Branding para documentos clínicos (receta, expediente) ──
+    /** Nombre comercial de la clínica (tenant) */
+    private String empresaNombre;
+    /** URL del logo principal de la clínica */
+    private String empresaLogoUrl;
+    /** URL del isotipo/ícono de la clínica */
+    private String empresaIsotipoUrl;
+    /** Sitio web de la clínica para QR */
+    private String empresaSitioWeb;
+    /** Dirección de la sucursal */
+    private String sucursalDireccion;
+    /** Teléfono de la sucursal */
+    private String sucursalTelefono;
+    /** Cédula profesional del doctor */
+    private String doctorCedula;
+    /** Especialidad del doctor */
+    private String doctorEspecialidad;
+    /** Edad del paciente en el momento de la consulta */
+    private Integer pacienteEdad;
+    /** Sexo del paciente */
+    private String pacienteSexo;
 }

@@ -194,4 +194,30 @@ public class CitaController {
                 .timestamp(OffsetDateTime.now())
                 .build());
     }
+
+    @GetMapping("/agenda-resumen")
+    @Operation(
+        summary = "Resumen de agenda para el panel lateral",
+        description = "Devuelve las citas del periodo indicado (HOY, SEMANA o MES) junto con métricas " +
+                      "de estado (pendientes, atendidas, canceladas) y la próxima cita activa. " +
+                      "Diseñado para alimentar el panel lateral del 30% en la vista de appointments."
+    )
+    public ResponseEntity<ApiResponse<com.meyisoft.dental.system.models.dto.AgendaResumenDTO>> getAgendaResumen(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) UUID sucursalId,
+            @RequestParam(required = false) UUID doctorId,
+            @RequestParam(defaultValue = "HOY") String tipo) {
+
+        // Si no se envía sucursalId, usamos la principal del usuario autenticado
+        UUID finalSucursalId = (sucursalId != null) ? sucursalId : principal.getSucursalId();
+
+        com.meyisoft.dental.system.models.dto.AgendaResumenDTO result =
+                service.getAgendaResumen(principal.getTenantId(), finalSucursalId, doctorId, tipo);
+
+        return ResponseEntity.ok(ApiResponse.<com.meyisoft.dental.system.models.dto.AgendaResumenDTO>builder()
+                .ok(true)
+                .result(result)
+                .timestamp(OffsetDateTime.now())
+                .build());
+    }
 }
