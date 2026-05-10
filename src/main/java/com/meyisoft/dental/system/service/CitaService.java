@@ -1208,7 +1208,7 @@ public class CitaService {
             if (entity.getDoctorId() != null) {
                 Usuario doc = usuarioRepository.findById(entity.getDoctorId()).orElse(null);
                 if (doc != null) {
-                    dto.setDoctorCedula(doc.getCedula());
+                    dto.setDoctorCedula(doc.getCedulaProfesional());
                     dto.setDoctorEspecialidad(
                         doc.getEspecialidades() != null && doc.getEspecialidades().length > 0
                             ? doc.getEspecialidades()[0] : null);
@@ -1218,7 +1218,7 @@ public class CitaService {
             if (entity.getPacienteId() != null) {
                 Paciente pac = pacienteRepository.findById(entity.getPacienteId()).orElse(null);
                 if (pac != null) {
-                    dto.setPacienteSexo(pac.getSexo());
+                    dto.setPacienteSexo(pac.getGenero());
                     if (pac.getFechaNacimiento() != null) {
                         dto.setPacienteEdad(
                             java.time.Period.between(pac.getFechaNacimiento(),
