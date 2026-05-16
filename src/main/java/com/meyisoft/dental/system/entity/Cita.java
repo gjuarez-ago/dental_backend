@@ -12,7 +12,12 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "citas")
+@Table(
+        name = "citas",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_citas_tenant_folio", columnNames = {"tenant_id", "folio"})
+        }
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
@@ -49,7 +54,7 @@ public class Cita extends BaseEntity {
     @Column(name = "source", length = 20)
     private String source; // APP, CRM
 
-    @Column(name = "folio", length = 20, unique = true)
+    @Column(name = "folio", length = 20)
     private String folio;
 
     @Column(name = "motivo_consulta", columnDefinition = "TEXT")

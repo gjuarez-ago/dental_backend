@@ -17,7 +17,11 @@ public class Empresa extends BaseEntity {
     private String nombreComercial;
 
     @Column(name = "plan_suscripcion")
-    private String planSuscripcion; // SOLO, CONSULTORIO, RED
+    private String planSuscripcion; // TRIAL, PRO, ENTERPRISE
+
+    @Column(name = "tenant_type")
+    @Builder.Default
+    private String tenantType = "DOCTOR_INDEPENDIENTE"; // CONSULTORIO, EMPRESA, DOCTOR_INDEPENDIENTE
 
     @Column(name = "logo_url")
     private String logoUrl;
@@ -72,11 +76,24 @@ public class Empresa extends BaseEntity {
     @Builder.Default
     private String giro = "GENERAL"; // DENTAL, PSICOLOGIA, GENERAL, etc.
 
+    @Column(name = "modalidad", length = 12)
+    @Builder.Default
+    private String modalidad = "PRESENCIAL"; // PRESENCIAL, ONLINE, AMBAS
+
     @Column(name = "horas_anticipacion_cancelacion")
     @Builder.Default
     private Integer horasAnticipacionCancelacion = 24;
 
+
+    @Column(name = "onboarding_completado")
+    @Builder.Default
+    private Boolean onboardingCompletado = false;
+    
     @Column(name = "dias_anticipacion_reserva")
+
     @Builder.Default
     private Integer diasAnticipacionReserva = 1;
+
+    @Column(name = "sucursal_id_principal")
+    private java.util.UUID sucursalIdPrincipal;
 }

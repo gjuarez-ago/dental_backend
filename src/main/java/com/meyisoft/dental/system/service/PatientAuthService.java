@@ -6,8 +6,10 @@ import com.meyisoft.dental.system.exception.BusinessException;
 import com.meyisoft.dental.system.exception.ErrorCodes;
 import com.meyisoft.dental.system.models.request.PatientCheckRequest;
 import com.meyisoft.dental.system.models.request.PatientCompleteProfileRequest;
+import com.meyisoft.dental.system.models.request.PatientLoginRequest;
 import com.meyisoft.dental.system.models.request.PatientRegisterRequest;
 import com.meyisoft.dental.system.models.request.PatientSetupAccessRequest;
+import com.meyisoft.dental.system.models.dto.PacienteDTO;
 import com.meyisoft.dental.system.models.response.AuthResponse;
 import com.meyisoft.dental.system.models.response.PatientCheckResponse;
 import com.meyisoft.dental.system.repository.CitaRepository;
@@ -39,12 +41,13 @@ public class PatientAuthService {
 
     @Transactional(readOnly = true)
     public PatientCheckResponse checkPatientPhone(PatientCheckRequest request) {
-        // 1. Prioridad: Verificar si es Personal del CRM (Staff) - Por Teléfono o Email
-        var usuarioOpt = usuarioRepository.findByTelefonoContactoAndActive(request.getTelefono());
-        
-        if (usuarioOpt.isEmpty()) {
-            usuarioOpt = usuarioRepository.findByEmailAndRegBorrado(request.getTelefono(), 1);
-        }
+        String identifier = request.getTelefono() == null ? "" : request.getTelefono().trim();
+        boolean looksLikeEmail = identifier.contains("@");
+
+        // 1. Prioridad: Verificar si es Personal del CRM (Staff)
+        var usuarioOpt = looksLikeEmail
+                ? usuarioRepository.findByEmailAndRegBorrado(identifier.toLowerCase(), 1)
+                : usuarioRepository.findByTelefonoContactoAndActive(identifier);
 
         if (usuarioOpt.isPresent()) {
             return PatientCheckResponse.builder()
@@ -53,8 +56,10 @@ public class PatientAuthService {
                     .build();
         }
 
-        // 2. Verificar si es Paciente
-        var pacientes = pacienteRepository.findAllByTelefonoAndRegBorrado(request.getTelefono(), 1);
+        // 2. Verificar si es Paciente (híbrido: correo o teléfono)
+        var pacientes = looksLikeEmail
+                ? pacienteRepository.findAllByEmailAndRegBorrado(identifier.toLowerCase(), 1)
+                : pacienteRepository.findAllByTelefonoAndRegBorrado(identifier, 1);
 
         if (pacientes.isEmpty()) {
             return PatientCheckResponse.builder()
@@ -70,6 +75,48 @@ public class PatientAuthService {
         return PatientCheckResponse.builder()
                 .status(isVerified ? "EXISTS_VERIFIED" : "EXISTS_UNVERIFIED")
                 .message(isVerified ? "Paciente verificado." : "Requiere completar perfil.")
+                .build();
+    }
+
+    /**
+     * Login específico para pacientes.
+     * Permite autenticación híbrida por correo o teléfono + NIP.
+     */
+    @Transactional(readOnly = true)
+    public AuthResponse login(PatientLoginRequest request) {
+        String identifier = request.getUser() != null && !request.getUser().isBlank()
+                ? request.getUser().trim()
+                : (request.getTelefono() == null ? "" : request.getTelefono().trim());
+
+        if (identifier.isBlank()) {
+            throw new BusinessException(ErrorCodes.AUTH_INVALID_CREDENTIALS,
+                    "Debes ingresar correo o teléfono.", HttpStatus.BAD_REQUEST);
+        }
+
+        boolean looksLikeEmail = identifier.contains("@");
+        var pacienteOpt = looksLikeEmail
+                ? pacienteRepository.findAllByEmailAndRegBorrado(identifier.toLowerCase(), 1).stream().findFirst()
+                : pacienteRepository.findFirstByTelefonoAndRegBorrado(identifier, 1);
+
+        if (pacienteOpt.isEmpty()) {
+            throw new BusinessException(ErrorCodes.USER_NOT_FOUND, "Paciente no encontrado.", HttpStatus.NOT_FOUND);
+        }
+
+        Paciente paciente = pacienteOpt.get();
+        if (!passwordEncoder.matches(request.getNip(), paciente.getPinHash())) {
+            throw new BusinessException(ErrorCodes.AUTH_INVALID_CREDENTIALS, "PIN inválido", HttpStatus.UNAUTHORIZED);
+        }
+
+        PacienteDTO pacienteDto = PacienteDTO.builder()
+                .id(paciente.getId())
+                .nombreCompleto(paciente.getNombreCompleto())
+                .telefono(paciente.getTelefono())
+                .email(paciente.getEmail())
+                .build();
+
+        return AuthResponse.builder()
+                .token(jwtUtil.generateTokenForPatient(paciente.getId(), paciente.getTelefono(), paciente.getEmail()))
+                .user(pacienteDto)
                 .build();
     }
 
@@ -116,10 +163,9 @@ public class PatientAuthService {
 
         // Si no envía TenantId, intentamos asignar la clínica por defecto para que no
         // quede huérfano
+        // OPTIMIZACIÓN: Usar query optimizada que solo obtiene el ID, evita cargar todas las empresas
         if (assignedTenantId == null) {
-            assignedTenantId = empresaRepository.findAll().stream()
-                    .findFirst()
-                    .map(Empresa::getId)
+            assignedTenantId = empresaRepository.findFirstTenantId()
                     .orElseThrow(() -> new BusinessException("CLINICA_NO_ENCONTRADA",
                             "No hay clínicas registradas en el sistema para asociar al paciente.",
                             HttpStatus.INTERNAL_SERVER_ERROR));
@@ -130,6 +176,8 @@ public class PatientAuthService {
                 .telefono(request.getTelefono())
                 .email(request.getEmail())
                 .genero(request.getGenero())
+                .fechaNacimiento(request.getFechaNacimiento())
+                .estadoId(request.getEstadoId())
                 .pinHash(passwordEncoder.encode(request.getNip()))
                 .pinCambiado(true)
                 .emailVerificado(true)

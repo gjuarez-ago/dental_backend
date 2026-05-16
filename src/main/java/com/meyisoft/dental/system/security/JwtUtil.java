@@ -18,10 +18,10 @@ import jakarta.annotation.PostConstruct;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:Y2xhdmVfcG9jaGlfbW92aWxfc2VjcmV0XzI1Nl9iaXRzX3NlZ3VyYQ==}")
+    @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("${jwt.expiration:86400000}")
+    @Value("${jwt.expiration:300000}")
     private long jwtExpiration;
 
     private SecretKey key;

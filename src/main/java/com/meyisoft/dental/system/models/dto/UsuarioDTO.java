@@ -20,7 +20,17 @@ public class UsuarioDTO {
     private UserRole rol;
     private UUID tenantId;
     private UUID sucursalIdPrincipal;
+    private String tenantType;
     private Boolean activo;
     private Boolean esPersonalClinico;
+    private Boolean onboardingCompletado;
+    private String fotografiaUrl;
+    private String biografia;
+    private java.time.LocalDate fechaNacimiento;
+    private String genero;
     private String[] especialidades;
+    private String nombreComercial;
+    private String sucursalTelefono;
+    private UUID estadoId;
+    private UUID municipioId;
 }

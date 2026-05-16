@@ -11,6 +11,10 @@ import com.meyisoft.dental.system.repository.EmpresaRepository;
 import com.meyisoft.dental.system.repository.ServicioDentalRepository;
 import com.meyisoft.dental.system.repository.SucursalRepository;
 import com.meyisoft.dental.system.repository.UsuarioRepository;
+import com.meyisoft.dental.system.repository.CatalogoEstadoRepository;
+import com.meyisoft.dental.system.repository.CatalogoMunicipioRepository;
+import com.meyisoft.dental.system.entity.CatalogoEstado;
+import com.meyisoft.dental.system.entity.CatalogoMunicipio;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -30,6 +34,8 @@ public class DataInitializer implements CommandLineRunner {
         private final UsuarioRepository usuarioRepository;
         private final ServicioDentalRepository servicioRepository;
         private final CatalogoCie10Repository cie10Repository;
+        private final CatalogoEstadoRepository estadoRepository;
+        private final CatalogoMunicipioRepository municipioRepository;
         private final PasswordEncoder passwordEncoder;
 
         @Override
@@ -38,11 +44,13 @@ public class DataInitializer implements CommandLineRunner {
 
                 if (empresaRepository.existsById(tenantId)
                                 || usuarioRepository.findByTelefonoContactoAndActive("9991234567").isPresent()) {
-                        log.info("Los datos de prueba de Sarai ya existen en el sistema. Saltando inicialización.");
+                        log.info("Los datos de prueba de Sarai ya existen en el sistema. Verificando catálogos geográficos...");
+                        inicializarCatalogosGeograficos();
                         return;
                 }
 
                 log.info("Cargando datos iniciales de prueba...");
+                inicializarCatalogosGeograficos();
 
                 // 0. Cargar Catálogo CIE-10 Dental Sugerido
                 List<CatalogoCie10> cie10Data = List.of(
@@ -170,6 +178,33 @@ public class DataInitializer implements CommandLineRunner {
                                 .procedimientoQuirurgico(procQuirurgico)
                                 .regBorrado(1)
                                 .build();
+        }
+
+        private void inicializarCatalogosGeograficos() {
+                if (estadoRepository.count() > 0) return;
+
+                log.info("Cargando catálogo de estados y municipios (Campeche inicial)...");
+                
+                CatalogoEstado campeche = CatalogoEstado.builder()
+                        .id(UUID.randomUUID())
+                        .nombre("Campeche")
+                        .codigo("CAM")
+                        .build();
+                estadoRepository.save(campeche);
+
+                List<String> municipiosCampeche = List.of(
+                        "Calkiní", "Campeche", "Carmen", "Champotón", "Hecelchakán", 
+                        "Hopelchén", "Palizada", "Tenabo", "Escárcega", "Calakmul", 
+                        "Candelaria", "Seybaplaya", "Dzitbalché"
+                );
+
+                municipiosCampeche.forEach(m -> {
+                        municipioRepository.save(CatalogoMunicipio.builder()
+                                .id(UUID.randomUUID())
+                                .nombre(m)
+                                .estadoId(campeche.getId())
+                                .build());
+                });
         }
 
         private CatalogoCie10 crearCie10(String codigo, String nombre, String categoria) {

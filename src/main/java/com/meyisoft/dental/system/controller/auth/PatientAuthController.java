@@ -1,13 +1,13 @@
 package com.meyisoft.dental.system.controller.auth;
 
-import com.meyisoft.dental.system.models.request.LoginRequest;
 import com.meyisoft.dental.system.models.request.PatientCheckRequest;
 import com.meyisoft.dental.system.models.request.PatientCompleteProfileRequest;
+import com.meyisoft.dental.system.models.request.PatientLoginRequest;
 import com.meyisoft.dental.system.models.request.PatientRegisterRequest;
 import com.meyisoft.dental.system.models.response.AuthResponse;
 import com.meyisoft.dental.system.models.response.PatientCheckResponse;
-import com.meyisoft.dental.system.service.AuthCRMService;
 import com.meyisoft.dental.system.service.PatientAuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,17 +22,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class PatientAuthController {
 
     private final PatientAuthService patientAuthService;
-    private final AuthCRMService authCRMService;
 
     @PostMapping("/check")
     public ResponseEntity<PatientCheckResponse> checkPhone(@Valid @RequestBody PatientCheckRequest request) {
         return ResponseEntity.ok(patientAuthService.checkPatientPhone(request));
     }
 
+    @Operation(
+            summary = "Login de pacientes",
+            description = "Endpoint exclusivo para pacientes. Autentica con correo o teléfono + NIP (6 dígitos).")
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        // Reutilizamos la lógica global de login (que ya incluye el fallback a paciente)
-        return ResponseEntity.ok(authCRMService.loginCRM(request));
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody PatientLoginRequest request) {
+        return ResponseEntity.ok(patientAuthService.login(request));
     }
 
     @PostMapping("/complete-profile")

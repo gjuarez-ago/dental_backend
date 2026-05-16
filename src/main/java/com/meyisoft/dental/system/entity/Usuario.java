@@ -13,7 +13,8 @@ import java.util.UUID;
 @Data
 @Entity
 @Table(name = "usuarios", uniqueConstraints = {
-        @UniqueConstraint(name = "uq_usuarios_phone", columnNames = { "telefono_contacto" })
+        @UniqueConstraint(name = "uq_usuarios_phone", columnNames = { "telefono_contacto" }),
+        @UniqueConstraint(name = "uq_usuarios_email", columnNames = { "email" })
 })
 @NoArgsConstructor
 @AllArgsConstructor
@@ -50,6 +51,9 @@ public class Usuario extends BaseEntity {
     @Column(name = "cedula_profesional", length = 50)
     private String cedulaProfesional;
 
+    @Column(name = "biografia", columnDefinition = "text")
+    private String biografia;
+
     @Column(name = "fotografia_url", length = 500)
     private String fotografiaUrl;
 
@@ -63,6 +67,9 @@ public class Usuario extends BaseEntity {
 
     @Column(name = "genero", length = 20)
     private String genero; // MASCULINO, FEMENINO, OTRO
+
+    @Column(name = "fecha_nacimiento")
+    private java.time.LocalDate fechaNacimiento;
 
     @Column(name = "especialidades", columnDefinition = "text[]")
     private String[] especialidades;

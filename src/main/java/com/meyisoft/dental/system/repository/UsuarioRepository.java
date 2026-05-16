@@ -31,4 +31,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     long countClinicalStaffByTenant(@Param("tenantId") UUID tenantId);
 
     java.util.List<Usuario> findByRolAndActivoAndRegBorrado(com.meyisoft.dental.system.enums.UserRole rol, Boolean activo, Integer regBorrado);
+
+    // OPTIMIZACIÓN: Combinar búsqueda de email y teléfono en una sola query
+    // Reducir de 2 queries a 1, evitando validaciones duplicadas
+    @Query("SELECT u FROM Usuario u WHERE (LOWER(u.email) = LOWER(:email) OR u.telefonoContacto = :phone) AND u.regBorrado = 1")
+    Optional<Usuario> findByEmailOrPhoneAndRegBorrado(@Param("email") String email, @Param("phone") String phone);
 }

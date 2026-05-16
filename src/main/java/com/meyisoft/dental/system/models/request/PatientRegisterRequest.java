@@ -1,7 +1,9 @@
 package com.meyisoft.dental.system.models.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -9,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -35,6 +38,14 @@ public class PatientRegisterRequest {
 
     @NotBlank(message = "El género es obligatorio")
     private String genero;
+
+    // Fecha de nacimiento (opcional, formato ISO yyyy-MM-dd)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Past(message = "La fecha de nacimiento debe ser anterior a hoy")
+    private LocalDate fechaNacimiento;
+
+    // Estado (opcional) — habilita recomendaciones por ubicación
+    private UUID estadoId;
 
     // Opcional: si la vista no lo envía, el backend asignará la primera clínica disponible
     private UUID tenantId;

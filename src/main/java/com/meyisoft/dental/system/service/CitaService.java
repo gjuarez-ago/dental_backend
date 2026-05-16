@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.security.SecureRandom;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -74,6 +75,7 @@ public class CitaService {
     private final EmpresaRepository empresaRepository;
     private final ObjectMapper objectMapper;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Data
     public static class DayConfig {
@@ -541,8 +543,19 @@ public class CitaService {
         }
         pacienteRepository.save(paciente);
 
+        // Si el paciente tiene email pero aún no tiene acceso al portal, generar credenciales
+        String pinTemporal = null;
+        if (paciente.getEmail() != null && !paciente.getEmail().isBlank()
+                && !Boolean.TRUE.equals(paciente.getPinCambiado())) {
+            pinTemporal = String.format("%06d", new SecureRandom().nextInt(1_000_000));
+            paciente.setPinHash(passwordEncoder.encode(pinTemporal));
+            paciente.setPinCambiado(true);
+            paciente.setEmailVerificado(true);
+            pacienteRepository.save(paciente);
+        }
+
         // Notificar al paciente la confirmación de su cita
-        notificarConfirmacionCitaPaciente(saved);
+        notificarConfirmacionCitaPaciente(saved, paciente, pinTemporal);
 
         // Notificar al doctor que se le ha asignado una cita
         notificarCitaAsignadaDoctor(saved);
@@ -582,39 +595,73 @@ public class CitaService {
         }
     }
 
-    private void notificarConfirmacionCitaPaciente(Cita cita) {
+    private void notificarConfirmacionCitaPaciente(Cita cita, Paciente paciente, String pinTemporal) {
         try {
-            Paciente paciente = pacienteRepository.findById(cita.getPacienteId()).orElse(null);
-            if (paciente == null)
-                return;
-
             Empresa empresa = empresaRepository.findById(cita.getTenantId()).orElse(null);
             Sucursal sucursal = sucursalRepository.findById(cita.getSucursalId()).orElse(null);
             ServicioDental servicio = (cita.getServicioId() != null)
                     ? servicioDentalRepository.findById(cita.getServicioId()).orElse(null)
                     : null;
-            Usuario doctor = (cita.getDoctorId() != null) ? usuarioRepository.findById(cita.getDoctorId()).orElse(null)
+            Usuario doctor = (cita.getDoctorId() != null)
+                    ? usuarioRepository.findById(cita.getDoctorId()).orElse(null)
                     : null;
 
-            Map<String, String> vars = Map.of(
-                    "NOMBRE_CLINICA", empresa != null ? empresa.getNombreComercial() : "Clínica Dental",
-                    "NOMBRE_PACIENTE", paciente.getNombreCompleto(),
-                    "FOLIO_CITA", cita.getFolio(),
-                    "FECHA_CITA", cita.getFechaHora().toLocalDate().toString(),
-                    "HORA_CITA", cita.getFechaHora().toLocalTime().toString(),
-                    "SERVICIO", servicio != null ? servicio.getNombre() : "Consulta General",
-                    "NOMBRE_DOCTOR", doctor != null ? doctor.getNombreCompleto() : "Por asignar",
-                    "NOMBRE_SUCURSAL", sucursal != null ? sucursal.getNombreSucursal() : "Sucursal Principal",
-                    "TELEFONO_CLINICA", sucursal != null ? sucursal.getTelefono() : "");
+            String nombreClinica   = empresa  != null ? empresa.getNombreComercial()     : "Clínica Dental";
+            String nombreSucursal  = sucursal != null ? sucursal.getNombreSucursal()     : "Sucursal Principal";
+            String telefonoClinica = sucursal != null ? sucursal.getTelefono()           : "";
+            String nombreServicio  = servicio != null ? servicio.getNombre()             : "Consulta General";
+            String nombreDoctor    = doctor   != null ? doctor.getNombreCompleto()       : "Por asignar";
 
-            String wppMessage = String.format(
-                    "🦷 Hola %s, tu cita (Folio: %s) ha sido CONFIRMADA para el %s a las %s en %s.",
-                    paciente.getNombreCompleto(), cita.getFolio(), cita.getFechaHora().toLocalDate().toString(),
-                    cita.getFechaHora().toLocalTime().toString(),
-                    sucursal != null ? sucursal.getNombreSucursal() : "nuestra clínica");
+            if (pinTemporal != null) {
+                // Primera vez en el portal: enviar confirmación + credenciales en un solo correo
+                String logoUrl = (empresa != null && empresa.getLogoUrl() != null && !empresa.getLogoUrl().isBlank())
+                        ? empresa.getLogoUrl()
+                        : "https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_blue-removebg-preview.png";
+                String sitioWeb = (empresa != null && empresa.getSitioWeb() != null && !empresa.getSitioWeb().isBlank())
+                        ? empresa.getSitioWeb()
+                        : "https://meyisoft.com/#/";
 
-            notificationService.notifyPaciente(paciente,
-                    com.meyisoft.dental.system.enums.NotificationType.CONFIRMACION_CITA, vars, wppMessage);
+                Map<String, String> vars = new java.util.HashMap<>();
+                vars.put("NOMBRE_CLINICA",   nombreClinica);
+                vars.put("NOMBRE_PACIENTE",  paciente.getNombreCompleto());
+                vars.put("FOLIO_CITA",       cita.getFolio());
+                vars.put("FECHA_CITA",       cita.getFechaHora().toLocalDate().toString());
+                vars.put("HORA_CITA",        cita.getFechaHora().toLocalTime().toString());
+                vars.put("SERVICIO",         nombreServicio);
+                vars.put("NOMBRE_DOCTOR",    nombreDoctor);
+                vars.put("NOMBRE_SUCURSAL",  nombreSucursal);
+                vars.put("TELEFONO_CLINICA", telefonoClinica);
+                vars.put("LOGO_URL",         logoUrl);
+                vars.put("SITIO_WEB",        sitioWeb);
+                vars.put("PACIENTE_NUMERO",  paciente.getTelefono());
+                vars.put("PIN_TEMPORAL",     pinTemporal);
+
+                emailService.sendHtmlEmail(
+                        paciente.getEmail(),
+                        "🦷 Cita confirmada + Acceso al portal - " + nombreClinica,
+                        "confirmacion-cita-credenciales",
+                        vars);
+            } else {
+                Map<String, String> vars = Map.of(
+                        "NOMBRE_CLINICA",   nombreClinica,
+                        "NOMBRE_PACIENTE",  paciente.getNombreCompleto(),
+                        "FOLIO_CITA",       cita.getFolio(),
+                        "FECHA_CITA",       cita.getFechaHora().toLocalDate().toString(),
+                        "HORA_CITA",        cita.getFechaHora().toLocalTime().toString(),
+                        "SERVICIO",         nombreServicio,
+                        "NOMBRE_DOCTOR",    nombreDoctor,
+                        "NOMBRE_SUCURSAL",  nombreSucursal,
+                        "TELEFONO_CLINICA", telefonoClinica);
+
+                String wppMessage = String.format(
+                        "🦷 Hola %s, tu cita (Folio: %s) ha sido CONFIRMADA para el %s a las %s en %s.",
+                        paciente.getNombreCompleto(), cita.getFolio(),
+                        cita.getFechaHora().toLocalDate().toString(),
+                        cita.getFechaHora().toLocalTime().toString(), nombreSucursal);
+
+                notificationService.notifyPaciente(paciente,
+                        com.meyisoft.dental.system.enums.NotificationType.CONFIRMACION_CITA, vars, wppMessage);
+            }
         } catch (Exception e) {
             log.error("Error al enviar notificación de confirmación al paciente: {}", e.getMessage());
         }

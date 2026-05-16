@@ -5,9 +5,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -38,6 +41,10 @@ public class Paciente extends BaseEntity {
 
     @Column(name = "direccion", length = 255)
     private String direccion;
+
+    @Column(name = "estado_id")
+    @JdbcTypeCode(SqlTypes.UUID)
+    private UUID estadoId;
 
     @Column(name = "ocupacion", length = 100)
     private String ocupacion;

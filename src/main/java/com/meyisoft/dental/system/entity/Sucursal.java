@@ -38,6 +38,14 @@ public class Sucursal extends BaseEntity {
     @Column(name = "direccion", columnDefinition = "TEXT")
     private String direccion;
 
+    @Column(name = "estado_id")
+    @JdbcTypeCode(SqlTypes.UUID)
+    private UUID estadoId;
+
+    @Column(name = "municipio_id")
+    @JdbcTypeCode(SqlTypes.UUID)
+    private UUID municipioId;
+
     @Column(name = "ventana_cancelacion")
     @Builder.Default
     private Integer ventanaCancelacion = 24; // Tiempo en horas para cambios de último momento
