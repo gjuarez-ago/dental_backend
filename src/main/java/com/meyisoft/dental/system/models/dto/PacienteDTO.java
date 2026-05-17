@@ -23,6 +23,7 @@ public class PacienteDTO {
     @Size(max = 150, message = "El nombre no puede exceder los 150 caracteres")
     private String nombreCompleto;
     private LocalDate fechaNacimiento;
+    private UUID estadoId;
 
     @NotBlank(message = "El teléfono es obligatorio")
     @Size(max = 15, message = "El teléfono no puede exceder los 15 caracteres")

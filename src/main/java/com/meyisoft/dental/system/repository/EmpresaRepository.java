@@ -12,6 +12,6 @@ public interface EmpresaRepository extends JpaRepository<Empresa, UUID> {
     
     // OPTIMIZACIÓN: Obtener solo el ID de la primera empresa, evitando cargar todas
     // Soluciona Query N+1 en PatientAuthService.register()
-    @Query(value = "SELECT e.id FROM empresa e LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT e.id FROM empresas e LIMIT 1", nativeQuery = true)
     Optional<UUID> findFirstTenantId();
 }

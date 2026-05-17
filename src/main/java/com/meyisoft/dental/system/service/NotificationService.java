@@ -156,8 +156,8 @@ public class NotificationService {
     private Map<String, String> enrichWithEmpresaData(java.util.UUID tenantId, Map<String, String> originalVars) {
         Map<String, String> finalVars = new HashMap<>(originalVars);
 
-        String defaultLogo = "https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_blue-removebg-preview.png";
-        String defaultWeb = "https://meyisoft.com/#/";
+        String defaultLogo = "https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_erm.png";
+        String defaultWeb = "https://novatia.pro";
 
         if (tenantId != null) {
             empresaRepository.findById(tenantId).ifPresent(empresa -> {

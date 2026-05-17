@@ -107,16 +107,9 @@ public class PatientAuthService {
             throw new BusinessException(ErrorCodes.AUTH_INVALID_CREDENTIALS, "PIN inválido", HttpStatus.UNAUTHORIZED);
         }
 
-        PacienteDTO pacienteDto = PacienteDTO.builder()
-                .id(paciente.getId())
-                .nombreCompleto(paciente.getNombreCompleto())
-                .telefono(paciente.getTelefono())
-                .email(paciente.getEmail())
-                .build();
-
         return AuthResponse.builder()
                 .token(jwtUtil.generateTokenForPatient(paciente.getId(), paciente.getTelefono(), paciente.getEmail()))
-                .user(pacienteDto)
+                .user(toPatientDTO(paciente))
                 .build();
     }
 
@@ -146,7 +139,7 @@ public class PatientAuthService {
         return AuthResponse.builder()
                 .token(jwtUtil.generateTokenForPatient(pacientePrincipal.getId(), pacientePrincipal.getTelefono(),
                         pacientePrincipal.getEmail()))
-                .user(pacientePrincipal)
+                .user(toPatientDTO(pacientePrincipal))
                 .build();
     }
 
@@ -192,7 +185,7 @@ public class PatientAuthService {
         return AuthResponse.builder()
                 .token(jwtUtil.generateTokenForPatient(nuevoPaciente.getId(), nuevoPaciente.getTelefono(),
                         nuevoPaciente.getEmail()))
-                .user(nuevoPaciente)
+                .user(toPatientDTO(nuevoPaciente))
                 .build();
     }
 
@@ -273,7 +266,7 @@ public class PatientAuthService {
             String telefonoClinica = empresa != null && empresa.getTelefonoWhatsApp() != null ? empresa.getTelefonoWhatsApp() : "";
             String logoUrl = empresa != null && empresa.getLogoUrl() != null && !empresa.getLogoUrl().isBlank()
                     ? empresa.getLogoUrl()
-                    : "https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_blue-removebg-preview.png";
+                    : "https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_erm.png";
 
             emailService.sendHtmlEmail(
                     request.getEmail(),
@@ -301,8 +294,19 @@ public class PatientAuthService {
         return AuthResponse.builder()
                 .token(jwtUtil.generateTokenForPatient(pacientePrincipal.getId(),
                         pacientePrincipal.getTelefono(), request.getEmail()))
-                .user(pacientePrincipal)
+                .user(toPatientDTO(pacientePrincipal))
                 .temporaryPin(generatedPin)
+                .build();
+    }
+
+    private PacienteDTO toPatientDTO(Paciente p) {
+        return PacienteDTO.builder()
+                .id(p.getId())
+                .nombreCompleto(p.getNombreCompleto())
+                .telefono(p.getTelefono())
+                .email(p.getEmail())
+                .genero(p.getGenero())
+                .estadoId(p.getEstadoId())
                 .build();
     }
 }

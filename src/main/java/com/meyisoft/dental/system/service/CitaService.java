@@ -616,10 +616,10 @@ public class CitaService {
                 // Primera vez en el portal: enviar confirmación + credenciales en un solo correo
                 String logoUrl = (empresa != null && empresa.getLogoUrl() != null && !empresa.getLogoUrl().isBlank())
                         ? empresa.getLogoUrl()
-                        : "https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_blue-removebg-preview.png";
+                        : "https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_erm.png";
                 String sitioWeb = (empresa != null && empresa.getSitioWeb() != null && !empresa.getSitioWeb().isBlank())
                         ? empresa.getSitioWeb()
-                        : "https://meyisoft.com/#/";
+                        : "https://novatia.pro";
 
                 Map<String, String> vars = new java.util.HashMap<>();
                 vars.put("NOMBRE_CLINICA",   nombreClinica);

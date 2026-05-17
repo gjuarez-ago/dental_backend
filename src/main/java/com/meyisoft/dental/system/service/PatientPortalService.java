@@ -80,9 +80,26 @@ public class PatientPortalService {
     }
 
     @Transactional(readOnly = true)
-    public List<TimelineEntryDTO> getMedicalHistory(UUID pacienteId) {
-        // 1. Obtener todas las citas del paciente que no estén borradas
-        List<Cita> citas = citaRepository.findByPacienteIdAndRegBorrado(pacienteId, 1);
+    public List<TimelineEntryDTO> getMedicalHistory(String telefono, String email) {
+        // 1. Resolver todos los registros Paciente en la red (igual que getMyAppointments)
+        List<Paciente> pacientes = new ArrayList<>();
+        if (telefono != null) {
+            pacientes.addAll(pacienteRepository.findAllByTelefonoAndRegBorrado(telefono, 1));
+        }
+        if (email != null) {
+            List<Paciente> porEmail = pacienteRepository.findAllByEmailAndRegBorrado(email, 1);
+            for (Paciente p : porEmail) {
+                if (pacientes.stream().noneMatch(existing -> existing.getId().equals(p.getId()))) {
+                    pacientes.add(p);
+                }
+            }
+        }
+
+        // 2. Recolectar todas las citas de todos los registros
+        List<Cita> citas = new ArrayList<>();
+        for (Paciente p : pacientes) {
+            citas.addAll(citaRepository.findByPacienteIdAndRegBorrado(p.getId(), 1));
+        }
 
         return citas.stream()
                 .map((Cita cita) -> {

@@ -4,78 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Nueva Cita Asignada</title>
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light only">
+    <title>Nueva cita asignada</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<body style="margin:0;padding:0;background-color:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
 
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f6f9;">
+<!-- Preheader -->
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#eef2f7;">
+    Se te ha asignado una nueva cita con {{NOMBRE_PACIENTE}} el {{FECHA_CITA}}.
+</div>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eef2f7;">
     <tr>
-        <td align="center" style="padding:24px 16px;">
-            <table role="presentation" width="580" cellspacing="0" cellpadding="0" border="0" style="max-width:580px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <td align="center" style="padding:32px 16px;">
+            <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,0.08);">
 
                 <!-- HEADER -->
                 <tr>
-                    <td style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);padding:28px 32px;text-align:center;">
+                    <td style="background:linear-gradient(135deg,#5b21b6 0%,#8b5cf6 100%);padding:32px 32px 28px 32px;text-align:center;">
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                             <tr>
-                                <td align="center" style="padding-bottom:12px;">
-                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;background-color:#ffffff;border-radius:10px;padding:10px;">
+                                <td align="center" style="padding-bottom:14px;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;background-color:#ffffff;border-radius:12px;padding:10px 14px;">
                                         <tr><td align="center">
-                                            <img src="{{LOGO_URL}}" alt="Logo" width="100" style="display:block; max-width:100%; height:auto;" />
+                                            <img src="{{LOGO_URL}}" alt="{{NOMBRE_CLINICA}}" width="110" style="display:block;max-width:100%;height:auto;border:0;" />
                                         </td></tr>
                                     </table>
                                 </td>
                             </tr>
-                            <tr><td align="center" style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">{{NOMBRE_CLINICA}}</td></tr>
-                            <tr><td align="center" style="font-size:13px;color:#ddd6fe;padding-top:4px;">Nueva Cita Asignada</td></tr>
+                            <tr><td align="center" style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:0.3px;line-height:26px;">{{NOMBRE_CLINICA}}</td></tr>
+                            <tr><td align="center" style="font-size:12px;color:#ddd6fe;padding-top:6px;text-transform:uppercase;letter-spacing:2px;font-weight:500;">Nueva cita asignada</td></tr>
                         </table>
                     </td>
                 </tr>
 
                 <!-- CUERPO -->
                 <tr>
-                    <td style="padding:32px 32px 16px 32px;">
+                    <td style="padding:36px 36px 8px 36px;">
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                            <tr><td style="font-size:18px;font-weight:700;color:#1e293b;padding-bottom:8px;">Dr(a). {{NOMBRE_DOCTOR}}</td></tr>
-                            <tr><td style="font-size:14px;color:#64748b;line-height:22px;padding-bottom:24px;">Se te ha asignado una nueva cita. Revisa los detalles a continuación:</td></tr>
+                            <tr><td style="font-size:20px;font-weight:700;color:#0f172a;padding-bottom:10px;letter-spacing:-0.2px;">Dr(a). {{NOMBRE_DOCTOR}}</td></tr>
+                            <tr><td style="font-size:15px;color:#475569;line-height:24px;padding-bottom:24px;">Se te ha asignado una nueva cita. A continuación encontrarás los detalles:</td></tr>
                         </table>
 
                         <!-- Tarjeta de detalles -->
-                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;">
                             <tr>
-                                <td style="padding:20px 24px;">
+                                <td style="padding:24px 28px;">
                                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                         <tr>
-                                            <td style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Paciente</td>
+                                            <td style="font-size:11px;color:#5b21b6;text-transform:uppercase;letter-spacing:2px;padding-bottom:4px;font-weight:600;">Paciente</td>
                                         </tr>
                                         <tr>
-                                            <td style="font-size:16px;font-weight:700;color:#7c3aed;padding-bottom:16px;">{{NOMBRE_PACIENTE}}</td>
+                                            <td style="font-size:18px;font-weight:700;color:#5b21b6;padding-bottom:20px;letter-spacing:0.3px;">{{NOMBRE_PACIENTE}}</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding-bottom:12px;">
+                                            <td style="padding-bottom:16px;border-top:1px solid #ddd6fe;padding-top:16px;">
                                                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                                     <tr>
-                                                        <td width="50%" style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Fecha</td>
-                                                        <td width="50%" style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Hora</td>
+                                                        <td width="50%" style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:2px;font-weight:600;">Fecha</td>
+                                                        <td width="50%" style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:2px;font-weight:600;">Hora</td>
                                                     </tr>
                                                     <tr>
-                                                        <td style="font-size:15px;font-weight:600;color:#1e293b;padding-top:4px;">{{FECHA_CITA}}</td>
-                                                        <td style="font-size:15px;font-weight:600;color:#1e293b;padding-top:4px;">{{HORA_CITA}}</td>
+                                                        <td style="font-size:16px;font-weight:700;color:#0f172a;padding-top:4px;">{{FECHA_CITA}}</td>
+                                                        <td style="font-size:16px;font-weight:700;color:#0f172a;padding-top:4px;">{{HORA_CITA}}</td>
                                                     </tr>
                                                 </table>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Servicio</td>
+                                            <td style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:2px;padding-bottom:4px;font-weight:600;">Servicio</td>
                                         </tr>
                                         <tr>
-                                            <td style="font-size:15px;font-weight:600;color:#1e293b;padding-bottom:16px;">{{SERVICIO}}</td>
+                                            <td style="font-size:15px;font-weight:600;color:#0f172a;padding-bottom:16px;">{{SERVICIO}}</td>
                                         </tr>
                                         <tr>
-                                            <td style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Motivo de Consulta</td>
+                                            <td style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:2px;padding-bottom:4px;font-weight:600;">Motivo de consulta</td>
                                         </tr>
                                         <tr>
-                                            <td style="font-size:14px;color:#475569;font-style:italic;">{{MOTIVO_CONSULTA}}</td>
+                                            <td style="font-size:14px;color:#475569;font-style:italic;line-height:20px;">{{MOTIVO_CONSULTA}}</td>
                                         </tr>
                                     </table>
                                 </td>
@@ -84,22 +91,43 @@
                     </td>
                 </tr>
 
-                <!-- FOOTER -->
+                <!-- FOOTER CLÍNICA -->
                 <tr>
-                    <td style="background-color:#f8fafc;padding:24px 32px;border-top:1px solid #e2e8f0;">
+                    <td style="background-color:#f8fafc;padding:24px 36px;border-top:1px solid #e2e8f0;margin-top:24px;">
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                             <tr>
-                                <td align="center" style="font-size:13px;color:#475569;line-height:20px;font-weight:600;padding-bottom:8px;">
-                                    {{NOMBRE_CLINICA}}
-                                </td>
+                                <td align="center" style="font-size:14px;color:#334155;font-weight:700;padding-bottom:8px;letter-spacing:0.2px;padding-top:16px;">{{NOMBRE_CLINICA}}</td>
                             </tr>
                             <tr>
-                                <td align="center" style="font-size:12px;color:#64748b;line-height:18px;">
-                                    📞 Teléfono de atención: <strong>{{TELEFONO_CLINICA}}</strong><br>
-                                    🌐 <a href="{{SITIO_WEB}}" style="color:#0ea5e9;text-decoration:none;">{{SITIO_WEB}}</a>
+                                <td align="center" style="font-size:12px;color:#64748b;line-height:20px;">
+                                    Atención al cliente: <strong style="color:#334155;">{{TELEFONO_CLINICA}}</strong><br>
+                                    <a href="{{SITIO_WEB}}" style="color:#5b21b6;text-decoration:none;font-weight:600;">{{SITIO_WEB}}</a>
                                 </td>
                             </tr>
-                            <tr><td align="center" style="font-size:11px;color:#cbd5e1;padding-top:16px;">Este correo fue enviado automáticamente. Por favor no responda a este mensaje.</td></tr>
+                            <tr><td align="center" style="font-size:11px;color:#94a3b8;padding-top:14px;line-height:16px;">Correo automático &mdash; por favor no respondas a este mensaje.</td></tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- POWERED BY NOVATIA -->
+                <tr>
+                    <td style="background-color:#0b1437;padding:18px 32px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td align="center">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                        <tr>
+                                            <td align="center" valign="middle" style="padding-right:12px;">
+                                                <img src="https://pub-8c6866b9de504c61a0aa8938f5cdc44c.r2.dev/empresas/logo_erm.png" alt="Novatia" width="30" height="30" style="display:block;border:0;border-radius:6px;background-color:#ffffff;padding:4px;" />
+                                            </td>
+                                            <td align="left" valign="middle">
+                                                <div style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;font-weight:600;line-height:11px;">Plataforma operada por</div>
+                                                <div style="font-size:15px;color:#ffffff;font-weight:700;letter-spacing:3px;line-height:20px;">NOVATIA</div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
                         </table>
                     </td>
                 </tr>
@@ -108,6 +136,5 @@
         </td>
     </tr>
 </table>
-
 </body>
 </html>

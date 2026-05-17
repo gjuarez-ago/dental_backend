@@ -49,7 +49,7 @@ public class PatientPortalController {
     public ResponseEntity<ApiResponse<List<TimelineEntryDTO>>> getMedicalHistory(
             @AuthenticationPrincipal UserPrincipal principal) {
         
-        List<TimelineEntryDTO> result = service.getMedicalHistory(principal.getUserId());
+        List<TimelineEntryDTO> result = service.getMedicalHistory(principal.getTelefono(), principal.getEmail());
         
         return ResponseEntity.ok(ApiResponse.<List<TimelineEntryDTO>>builder()
                 .ok(true)
